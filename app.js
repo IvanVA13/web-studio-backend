@@ -24,7 +24,7 @@ app.use(cors());
 app.use(express.json({ limit: 5000 }));
 app.use(boolParser());
 app.use(sessions(sessionOpt));
-// app.use(cookieParser());
+app.use(cookieParser());
 // app.use('/api', rateLimit('rules'));
 app.use('/api', router);
 

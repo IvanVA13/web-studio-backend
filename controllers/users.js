@@ -8,16 +8,15 @@ const queryString = require('query-string');
 const { httpCode, statusCode, message } = require('../helpers/constants');
 const {
   createUser,
-  getUserById,
   getUserByEmail,
   updateUser,
-  getUserByVerifyEmailToken,
+  getUserByQuery,
+  updateUserPassword,
 } = require('../repositories/users');
 const UploadAvatarService = require('../services/cloud-avatar');
 const { SenderEmailService } = require('../services/email-gen');
 const { createSendGridSender } = require('../services/email-senders');
 const { verifyEmailTemp } = require('../helpers/emailTemp');
-const { findSessionById } = require('../repositories/sessions');
 
 require('dotenv').config();
 const {
@@ -51,7 +50,7 @@ const register = async (req, res) => {
     ...verifyEmailTemp,
   });
 
-  return res.status(201).json({
+  return res.status(httpCode.CREATED).json({
     status: statusCode.SUCCESS,
     code: httpCode.CREATED,
     data: {
@@ -75,6 +74,7 @@ const login = async (req, res) => {
   if (!validPass || !verify) {
     throw new Unauthorized(message.NOT_AUTHORIZED);
   }
+  req.session.userId = id;
   const payload = { id, sid };
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
@@ -82,8 +82,6 @@ const login = async (req, res) => {
   const refreshToken = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_REFRESH_EXPIRE_TIME,
   });
-  session = req.session;
-  session.userId = id;
 
   await updateUser(id, { token, refreshToken });
   return res.json({
@@ -122,7 +120,7 @@ const refresh = async (req, res) => {
       });
       const user = await updateUser(id, { token });
       if (user) {
-        return res.status(httpCode.OK).json({
+        return res.json({
           statusCode: statusCode.SUCCESS,
           token,
         });
@@ -142,7 +140,7 @@ const logout = async (req, res) => {
   const { id } = req?.user;
   await updateUser(id, { token: null });
   req.session.destroy();
-  return res.status(204).json({});
+  return res.status(httpCode.NO_CONTENT).json({});
 };
 
 const current = async (req, res) => {
@@ -183,7 +181,7 @@ const verificationWithEmail = async (req, res) => {
     body: { email: emailReq },
   } = req;
 
-  const user = await getUserByVerifyEmailToken(verifyEmailToken);
+  const user = await getUserByQuery({ verifyEmailToken });
   if (!user) {
     throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
   }
@@ -228,7 +226,7 @@ const subscribe = async (req, res) => {
   }
 };
 
-const googleAuth = async (req, res) => {
+const googleAuth = async (_, res) => {
   const stringifiedParams = queryString.stringify({
     client_id: CLIENT_ID_GOOGLE_AUTH,
     redirect_uri: `${BASE_URL}/users/google-redirect`,
@@ -246,6 +244,7 @@ const googleAuth = async (req, res) => {
 };
 
 const googleRedirect = async (req, res) => {
+  const { sessionID: sid } = req;
   const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
   const urlObj = new URL(fullUrl);
   const urlParams = queryString.parse(urlObj.search);
@@ -289,12 +288,11 @@ const googleRedirect = async (req, res) => {
   const createdUser = await getUserByEmail(email);
 
   const { id } = existingUser ? existingUser : createdUser;
-
-  const payload = { id };
+  req.session.userId = id;
+  const payload = { id, sid };
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
   });
-
   const refreshToken = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_REFRESH_EXPIRE_TIME,
   });
@@ -303,6 +301,54 @@ const googleRedirect = async (req, res) => {
     `${BASE_URL_FRONT}/login?token=${token}&refreshToken=${refreshToken}&gid=${userGoogleId}
     `,
   );
+};
+
+const forgotten = async (req, res) => {
+  const { email } = req.body;
+  const user = await getUserByEmail(email);
+  if (!user) {
+    throw new NotFound(message.USER_NOT_REG);
+  }
+  const { id, LastName, firstName } = user;
+  const resetPasswordToken = uuid();
+
+  await updateUser(id, { resetPasswordToken });
+  await verifyEmail.sendEmail(email, {
+    userName: `${LastName} ${firstName}`,
+    link: `users/verify/${resetPasswordToken}`,
+    ...verifyEmailTemp,
+  });
+
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      user: {
+        email,
+      },
+    },
+  });
+};
+
+const resetPassword = async (req, res) => {
+  const {
+    body: { password },
+    params: { resetPasswordToken },
+  } = req;
+
+  const user = await getUserByQuery({ resetPasswordToken });
+
+  if (!user) {
+    throw new NotFound(message.USER_NOT_REG);
+  }
+
+  await updateUserPassword(user.id, password);
+
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    message: message.PASSWORD_RESET_OK,
+  });
 };
 
 module.exports = {
@@ -316,4 +362,6 @@ module.exports = {
   subscribe,
   googleAuth,
   googleRedirect,
+  forgotten,
+  resetPassword,
 };

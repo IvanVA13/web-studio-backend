@@ -11,11 +11,17 @@ const {
   subscribe,
   googleAuth,
   googleRedirect,
+  forgotten,
+  resetPassword,
 } = require('../../../controllers/users');
 const asyncWrapper = require('../../../helpers/asyncWrapper');
 const guard = require('../../../helpers/guard');
 const uploadImg = require('../../../helpers/upload-img');
-const { validUser } = require('./validation');
+const {
+  validUser,
+  validationForgotten,
+  validationResetPassword,
+} = require('./validation');
 
 const router = express.Router();
 
@@ -35,5 +41,12 @@ router.patch('/subscribe', guard, asyncWrapper(subscribe));
 router.get('/google-auth', asyncWrapper(googleAuth));
 router.get('/google-redirect', asyncWrapper(googleRedirect));
 router.get('/refresh-token', refresh);
+
+router.post('/forgotten', validationForgotten, forgotten);
+router.post(
+  '/reset-password/:resetPasswordToken',
+  validationResetPassword,
+  resetPassword,
+);
 
 module.exports = router;

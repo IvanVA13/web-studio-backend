@@ -56,14 +56,21 @@ const user = new Schema(
       type: Boolean,
       default: true,
     },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
   },
   { versionKey: false, timestamps: true },
 );
 
 const passCrypt = async function (next) {
-  if (this.isModified('password')) {
-    const salt = await bcrypt.genSalt(9);
+  const salt = await bcrypt.genSalt(9);
+  if (this.isModified && this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, salt);
+  }
+  if (this?._update?.password) {
+    this._update.password = await bcrypt.hash(this._update.password, salt);
   }
   next();
 };
@@ -73,6 +80,7 @@ const isValidPassword = async function (password) {
 };
 
 user.pre('save', passCrypt);
+user.pre('updateOne', passCrypt);
 user.methods.isValidPassword = isValidPassword;
 const User = model('user', user);
 module.exports = User;

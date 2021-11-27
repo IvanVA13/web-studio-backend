@@ -14,6 +14,16 @@ const userValidationSchema = Joi.object({
   verify: Joi.string().optional(),
   verifyEmailToken: Joi.string().optional(),
   verifySmsCode: Joi.string().optional(),
+  subscriptionToNewsletter: Joi.string().optional(),
+  resetPasswordToken: Joi.string().optional(),
+});
+
+const forgottenValidationSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+const resetPasswordValidationSchema = Joi.object({
+  password: Joi.string().min(6).max(50).required(),
 });
 
 const validate = async (schema, value, errMessage, next) => {
@@ -31,5 +41,11 @@ const validate = async (schema, value, errMessage, next) => {
 module.exports = {
   validUser: (req, _, next) => {
     return validate(userValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationForgotten: (req, _, next) => {
+    return validate(forgottenValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationResetPassword: (req, _, next) => {
+    return validate(resetPasswordValidationSchema, req.body, NOT_VALID, next);
   },
 };

@@ -13,8 +13,8 @@ const getUserById = async userId => {
 const getUserByEmail = async email => {
   return await User.findOne({ email });
 };
-const getUserByVerifyEmailToken = async verifyEmailToken => {
-  return await User.findOne({ verifyEmailToken });
+const getUserByQuery = async query => {
+  return await User.findOne({ ...query });
 };
 const updateUser = async (userId, body) => {
   const user = await User.findOneAndUpdate(
@@ -33,12 +33,17 @@ const addAvatarUrlToUser = async (userId, body) => {
   return user;
 };
 
+const updateUserPassword = async (_id, password) => {
+  return await User.updateOne({ _id }, { password, resetPasswordToken: null });
+};
+
 module.exports = {
   createUser,
   getAllUsers,
   getUserById,
   getUserByEmail,
-  getUserByVerifyEmailToken,
+  getUserByQuery,
   updateUser,
   addAvatarUrlToUser,
+  updateUserPassword,
 };

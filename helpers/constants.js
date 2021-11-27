@@ -36,6 +36,7 @@ const message = {
   NOT_VALID: 'missing required fields',
   WRONG_FORMAT: 'Wrong format!',
   ORDER_NOT_FOUND: 'Order not found',
+  PASSWORD_RESET_OK: 'Password reset success',
 };
 
 const userRole = {
