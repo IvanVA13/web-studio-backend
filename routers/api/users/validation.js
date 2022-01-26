@@ -6,9 +6,10 @@ const {
 
 const userValidationSchema = Joi.object({
   firstName: Joi.string().max(40).optional(),
-  LastName: Joi.string().max(40).optional(),
+  lastName: Joi.string().max(40).optional(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).max(50).required(),
+  sex: Joi.string().valid('male', 'female').optional(),
   role: Joi.string().optional(),
   token: Joi.string().optional(),
   verify: Joi.string().optional(),

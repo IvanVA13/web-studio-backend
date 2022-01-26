@@ -16,9 +16,13 @@ const user = new Schema(
       type: String,
       default: 'user-name',
     },
-    LastName: {
+    lastName: {
       type: String,
       default: 'user-last-name',
+    },
+    sex: {
+      type: String,
+      enum: ['male', 'female'],
     },
     role: {
       type: String,
@@ -26,11 +30,25 @@ const user = new Schema(
     },
     avatarUrl: {
       type: String,
-      default: null,
+      default: function () {
+        if (this.sex === 'male') {
+          return 'https://res.cloudinary.com/djp4ztej6/image/upload/c_scale,w_250/v1640036716/CloudAvatar/users-avatars/male.png';
+        }
+        if (this.sex === 'female') {
+          return 'https://res.cloudinary.com/djp4ztej6/image/upload/c_scale,w_250/v1640033202/CloudAvatar/users-avatars/female.png';
+        }
+      },
     },
     idCloudAvatar: {
       type: String,
-      default: null,
+      default: function () {
+        if (this.sex === 'male') {
+          return 'male';
+        }
+        if (this.sex === 'female') {
+          return 'female';
+        }
+      },
     },
     token: {
       type: String,

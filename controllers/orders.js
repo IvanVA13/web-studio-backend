@@ -18,11 +18,11 @@ const verifyEmail = new SenderEmailService(NODE_ENV, createSendGridSender);
 
 const createOrder = async (req, res) => {
   const { body, user } = req;
-  const { id, email, LastName, firstName } = user;
+  const { id, email, lastName, firstName } = user;
   if (body) {
     const { _id, date, name, comment } = await create(id, body);
     await verifyEmail.sendEmail(email, {
-      userName: `${LastName} ${firstName}`,
+      userName: `${lastName} ${firstName}`,
       subject: `You make order № ${_id}`,
       ...newOrderEmailTemp,
       table: {
@@ -56,7 +56,7 @@ const updateOrder = async (req, res) => {
     params: { id },
   } = req;
   const { status: reqStatus } = body;
-  const { id: userId, email, role, LastName, firstName } = user;
+  const { id: userId, email, role, lastName, firstName } = user;
 
   if (role === userRole.USER && reqStatus === orderStatus.CANCEL) {
     const order = await update(id, userId, {
@@ -65,7 +65,7 @@ const updateOrder = async (req, res) => {
     if (order) {
       const { date, name, comment, status } = order;
       await verifyEmail.sendEmail(email, {
-        userName: `${LastName} ${firstName}`,
+        userName: `${lastName} ${firstName}`,
         subject: `You cancel order № ${id}`,
         ...cancelOrderEmailTemp,
         table: {

@@ -13,6 +13,11 @@ const {
   googleRedirect,
   forgotten,
   resetPassword,
+  changeFirstName,
+  changeLastName,
+  changeEmail,
+  changePassword,
+  changeSex,
 } = require('../../../controllers/users');
 const asyncWrapper = require('../../../helpers/asyncWrapper');
 const guard = require('../../../helpers/guard');
@@ -35,6 +40,11 @@ router.patch(
   uploadImg.single('avatar'),
   asyncWrapper(avatars),
 );
+router.patch('/first-name', guard, asyncWrapper(changeFirstName));
+router.patch('/last-name', guard, asyncWrapper(changeLastName));
+router.patch('/email', guard, asyncWrapper(changeEmail));
+router.patch('/password', guard, asyncWrapper(changePassword));
+router.patch('/sex', guard, asyncWrapper(changeSex));
 router.get('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
 router.post('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
 router.patch('/subscribe', guard, asyncWrapper(subscribe));

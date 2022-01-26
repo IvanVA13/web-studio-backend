@@ -23,6 +23,7 @@
     "cors": "2.8.5",
     "cross-env": "7.0.3",
     "express": "4.17.1",
+    "helmet": "^4.6.0",
     "morgan": "1.10.0"
   },
   "devDependencies": {
@@ -44,7 +45,6 @@
     "express-rate-limit": "^5.3.0",
     "express-session": "^1.17.2",
     "gravatar": "^1.8.2",
-    "helmet": "^4.6.0",
     "http-errors": "^1.7.2",
     "jimp": "^0.16.1",
     "joi": "^17.4.2",
@@ -59,6 +59,7 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "query-string": "^7.0.1",
+    "swagger-ui-express": "^4.3.0",
     "uuid": "^8.3.2"
   }
 }

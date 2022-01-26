@@ -5,7 +5,7 @@ const {
 } = require('../../../helpers/constants');
 
 const orderCreateSchema = Joi.object({
-  date: Joi.date(),
+  date: Joi.date().required(),
   name: Joi.string().min(3).max(40),
   comment: Joi.string().min(3).max(150),
   status: Joi.string().valid('new', 'done', 'cancel').optional(),

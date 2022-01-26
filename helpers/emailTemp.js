@@ -3,6 +3,16 @@ const verifyEmailTemp = {
   btnText: 'Click here to verify',
 };
 
+const resetPasswordTemp = {
+  subject: 'Reset your password',
+  btnText: 'Click here to reset password',
+};
+
+const changeEmailTemp = {
+  subject: 'Change email',
+  btnText: 'Click here to confirm change email',
+};
+
 const newOrderEmailTemp = {
   intro: 'Your order has been processed successfully',
   instructions: 'You can check your order in order list:',
@@ -16,4 +26,10 @@ const cancelOrderEmailTemp = {
   link: 'orders',
 };
 
-module.exports = { verifyEmailTemp, newOrderEmailTemp, cancelOrderEmailTemp };
+module.exports = {
+  verifyEmailTemp,
+  resetPasswordTemp,
+  changeEmailTemp,
+  newOrderEmailTemp,
+  cancelOrderEmailTemp,
+};

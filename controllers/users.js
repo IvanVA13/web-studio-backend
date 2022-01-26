@@ -16,7 +16,11 @@ const {
 const UploadAvatarService = require('../services/cloud-avatar');
 const { SenderEmailService } = require('../services/email-gen');
 const { createSendGridSender } = require('../services/email-senders');
-const { verifyEmailTemp } = require('../helpers/emailTemp');
+const {
+  verifyEmailTemp,
+  resetPasswordTemp,
+  changeEmailTemp,
+} = require('../helpers/emailTemp');
 
 require('dotenv').config();
 const {
@@ -30,6 +34,7 @@ const {
   JWT_REFRESH_EXPIRE_TIME,
 } = process.env;
 const verifyEmail = new SenderEmailService(NODE_ENV, createSendGridSender);
+const uploads = new UploadAvatarService();
 
 const register = async (req, res) => {
   const { body } = req;
@@ -39,13 +44,13 @@ const register = async (req, res) => {
     throw new Conflict(message.CONFLICT);
   }
   const verifyEmailToken = uuid();
-  const { email, LastName, firstName } = await createUser({
+  const { email, lastName, firstName } = await createUser({
     ...body,
     verifyEmailToken,
   });
 
   await verifyEmail.sendEmail(email, {
-    userName: `${LastName} ${firstName}`,
+    userName: `${lastName} ${firstName}`,
     link: `users/verify/${verifyEmailToken}`,
     ...verifyEmailTemp,
   });
@@ -160,7 +165,7 @@ const current = async (req, res) => {
 const avatars = async (req, res) => {
   const { id, idCloudAvatar: idAvatar } = req?.user;
   const { path } = req.file;
-  const uploads = new UploadAvatarService();
+
   const { idCloudAvatar, avatarUrl } = await uploads.saveAvatar(path, idAvatar);
 
   await fs.unlink(path);
@@ -171,6 +176,79 @@ const avatars = async (req, res) => {
     code: httpCode.OK,
     data: {
       avatarUrl,
+    },
+  });
+};
+
+const changeFirstName = async (req, res) => {
+  const { user, body } = req;
+  const { id } = user;
+  const { firstName } = body;
+
+  await updateUser(id, { firstName });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      firstName,
+    },
+  });
+};
+
+const changeLastName = async (req, res) => {
+  const { user, body } = req;
+  const { id } = user;
+  const { lastName } = body;
+
+  await updateUser(id, { lastName });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      lastName,
+    },
+  });
+};
+
+const changeEmail = async (req, res) => {
+  const { user, body } = req;
+  const { id } = user;
+  const { email } = body;
+
+  await updateUser(id, { email });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      email,
+    },
+  });
+};
+
+const changePassword = async (req, res) => {
+  const { user, body } = req;
+  const { id } = user;
+  const { password } = body;
+
+  await updateUserPassword(id, password);
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    message: message.PASSWORD_RESET_OK,
+  });
+};
+
+const changeSex = async (req, res) => {
+  const { user, body } = req;
+  const { id } = user;
+  const { sex } = body;
+
+  await updateUser(id, { sex });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      sex,
     },
   });
 };
@@ -278,7 +356,7 @@ const googleRedirect = async (req, res) => {
   if (!existingUser) {
     await createUser({
       firstName: given_name,
-      LastName: family_name,
+      lastName: family_name,
       email,
       password: userGoogleId,
       avatarUrl: picture,
@@ -309,14 +387,14 @@ const forgotten = async (req, res) => {
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
-  const { id, LastName, firstName } = user;
+  const { id, lastName, firstName } = user;
   const resetPasswordToken = uuid();
 
   await updateUser(id, { resetPasswordToken });
   await verifyEmail.sendEmail(email, {
-    userName: `${LastName} ${firstName}`,
+    userName: `${lastName} ${firstName}`,
     link: `users/verify/${resetPasswordToken}`,
-    ...verifyEmailTemp,
+    ...resetPasswordTemp,
   });
 
   return res.json({
@@ -364,4 +442,9 @@ module.exports = {
   googleRedirect,
   forgotten,
   resetPassword,
+  changeFirstName,
+  changeLastName,
+  changeEmail,
+  changePassword,
+  changeSex,
 };
