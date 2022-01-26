@@ -46,7 +46,7 @@ router.patch('/email', guard, asyncWrapper(changeEmail));
 router.patch('/password', guard, asyncWrapper(changePassword));
 router.patch('/sex', guard, asyncWrapper(changeSex));
 router.get('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
-router.post('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
+router.post('/verify', asyncWrapper(verificationWithEmail));
 router.patch('/subscribe', guard, asyncWrapper(subscribe));
 router.get('/google-auth', asyncWrapper(googleAuth));
 router.get('/google-redirect', asyncWrapper(googleRedirect));
