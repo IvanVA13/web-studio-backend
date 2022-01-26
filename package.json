@@ -1,24 +1,13 @@
 {
   "name": "web-studio-backend",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
     "start": "cross-env NODE_ENV=production node ./bin/server.js",
     "start:dev": "cross-env NODE_ENV=development nodemon ./bin/server.js",
     "lint": "eslint **/*.js",
     "lint:fix": "eslint --fix **/*.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/IvanVA13/web-studio-backend.git"
-  },
-  "keywords": [],
-  "author": "Ivan Volobuev",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/IvanVA13/web-studio-backend/issues"
-  },
-  "homepage": "https://github.com/IvanVA13/web-studio-backend#readme",
   "dependencies": {
     "@sendgrid/mail": "^7.4.6",
     "axios": "^0.21.4",
