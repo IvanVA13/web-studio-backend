@@ -68,7 +68,10 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  // const { body, sessionID: sid } = req;
+  const {
+    body,
+    // sessionID: sid
+  } = req;
   const { email: reqEmail, password } = body;
   const user = await getUserByEmail(reqEmail);
   if (!user) {
