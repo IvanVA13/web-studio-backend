@@ -51,7 +51,7 @@ const register = async (req, res) => {
 
   await verifyEmail.sendEmail(email, {
     userName: `${lastName} ${firstName}`,
-    link: `users/verify/${verifyEmailToken}`,
+    link: `api/users/verify/${verifyEmailToken}`,
     ...verifyEmailTemp,
   });
 
@@ -274,25 +274,37 @@ const verificationWithEmail = async (req, res) => {
     params: { verifyEmailToken },
     body: { email: emailReq },
   } = req;
+  if (verifyEmailToken) {
+    const user = await getUserByQuery({ verifyEmailToken });
 
-  const user = await getUserByQuery({ verifyEmailToken });
-  if (!user) {
-    throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
+    if (!user) {
+      throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
+    }
+    const { _id, verifyEmailToken: verifyToken } = user;
+    if (verifyEmailToken === verifyToken) {
+      await updateUser(_id, {
+        verifyEmailToken: null,
+        verify: true,
+      });
+      return res.json({
+        status: statusCode.SUCCESS,
+        code: httpCode.OK,
+        message: message.VERIFY_SUCCESS,
+      });
+    }
   }
-  const { _id, verify, verifyEmailToken: verifyToken } = user;
-  if (!emailReq && verifyEmailToken === verifyToken) {
-    await updateUser(_id, {
-      verifyEmailToken: null,
-      verify: true,
+
+  if (emailReq) {
+    const user = await getUserByEmail(emailReq);
+    if (!user) {
+      throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
+    }
+    const { firstName, lastName, verifyEmailToken } = user;
+    await verifyEmail.sendEmail(emailReq, {
+      userName: `${lastName} ${firstName}`,
+      link: `api/users/verify/${verifyEmailToken}`,
+      ...verifyEmailTemp,
     });
-    return res.json({
-      status: statusCode.SUCCESS,
-      code: httpCode.OK,
-      message: message.VERIFY_SUCCESS,
-    });
-  }
-  if (emailReq && !verify) {
-    await verifyEmail.sendEmail(emailReq, verifyToken);
 
     return res.json({
       status: statusCode.SUCCESS,
