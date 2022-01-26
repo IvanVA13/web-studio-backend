@@ -8,9 +8,10 @@ const {
   message: { WRONG_FORMAT },
 } = require('./constants');
 
-const uniquePartOfName = `${Date.now()}~${new Date(
-  Date.now(),
-).toLocaleDateString('ua-UA')}`;
+const uniquePartOfName = `${Math.random() * 1000000}`;
+// `${Date.now()}~${new Date(
+// Date.now(),
+// ).toLocaleDateString('ua-UA')}`;
 
 const storage = multer.diskStorage({
   destination: (_, __, cb) => {
