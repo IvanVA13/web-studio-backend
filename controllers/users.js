@@ -68,7 +68,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { body, sessionID: sid } = req;
+  // const { body, sessionID: sid } = req;
   const { email: reqEmail, password } = body;
   const user = await getUserByEmail(reqEmail);
   if (!user) {
@@ -79,8 +79,11 @@ const login = async (req, res) => {
   if (!validPass || !verify) {
     throw new Unauthorized(message.NOT_AUTHORIZED);
   }
-  req.session.userId = id;
-  const payload = { id, sid };
+  req.user = id;
+  const payload = {
+    id,
+    // , sid
+  };
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
   });
@@ -113,16 +116,26 @@ const refresh = async (req, res) => {
   if (authorizationHeader) {
     try {
       const refreshToken = await authorizationHeader.replace('Bearer ', '');
-      let { id, sid } = await jwt.verify(refreshToken, JWT_SECRET_KEY);
-      const { sessionID } = req;
-      if (sid !== sessionID) {
-        req.session.userId = id;
-        sid = sessionID;
-      }
+      let {
+        id,
+        // , sid
+      } = await jwt.verify(refreshToken, JWT_SECRET_KEY);
+      // const { sessionID } = req;
+      // if (sid !== sessionID) {
+      //   req.session.userId = id;
+      //   sid = sessionID;
+      // }
 
-      const token = await jwt.sign({ id, sid }, JWT_SECRET_KEY, {
-        expiresIn: JWT_ACCESS_EXPIRE_TIME,
-      });
+      const token = await jwt.sign(
+        {
+          id,
+          // , sid
+        },
+        JWT_SECRET_KEY,
+        {
+          expiresIn: JWT_ACCESS_EXPIRE_TIME,
+        },
+      );
       const user = await updateUser(id, { token });
       if (user) {
         return res.json({
@@ -144,7 +157,7 @@ const refresh = async (req, res) => {
 const logout = async (req, res) => {
   const { id } = req?.user;
   await updateUser(id, { token: null });
-  req.session.destroy();
+  // req.session.destroy();
   return res.status(httpCode.NO_CONTENT).json({});
 };
 
@@ -322,7 +335,7 @@ const googleAuth = async (_, res) => {
 };
 
 const googleRedirect = async (req, res) => {
-  const { sessionID: sid } = req;
+  // const { sessionID: sid } = req;
   const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
   const urlObj = new URL(fullUrl);
   const urlParams = queryString.parse(urlObj.search);
@@ -366,8 +379,12 @@ const googleRedirect = async (req, res) => {
   const createdUser = await getUserByEmail(email);
 
   const { id } = existingUser ? existingUser : createdUser;
-  req.session.userId = id;
-  const payload = { id, sid };
+  // req.session.userId = id;
+
+  const payload = {
+    id,
+    // , sid
+  };
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
   });

@@ -5,7 +5,7 @@ const { httpCode, message, statusCode } = require('./constants.js');
 
 const guard = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, user) => {
-    const { userId } = req.session;
+    // const { userId } = req.session;
     const headerAuth = req.get('Authorization');
     let token = null;
     if (headerAuth) {
