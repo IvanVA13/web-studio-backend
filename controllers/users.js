@@ -323,7 +323,7 @@ const subscribe = async (req, res) => {
 const googleAuth = async (_, res) => {
   const stringifiedParams = queryString.stringify({
     client_id: CLIENT_ID_GOOGLE_AUTH,
-    redirect_uri: `${BASE_URL}/users/google-redirect`,
+    redirect_uri: `${BASE_URL}/api/users/google-redirect`,
     scope: [
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
@@ -351,7 +351,7 @@ const googleRedirect = async (req, res) => {
     data: {
       client_id: CLIENT_ID_GOOGLE_AUTH,
       client_secret: CLIENT_SECRET_GOOGLE_AUTH,
-      redirect_uri: `${BASE_URL}/users/google-redirect`,
+      redirect_uri: `${BASE_URL}/api/users/google-redirect`,
       grant_type: 'authorization_code',
       code,
     },
