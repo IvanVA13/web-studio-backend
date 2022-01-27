@@ -50,6 +50,14 @@ const orderStatus = {
   DONE: 'done',
 };
 
+const reqLimiterAPI = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000,
+  handler: (_, __, ___) => {
+    throw new TooManyRequests(message.TOO_MANY_REQUESTS);
+  },
+};
+
 module.exports = {
   httpCode,
   statusCode,
@@ -57,4 +65,5 @@ module.exports = {
   userRole,
   orderStatus,
   company,
+  reqLimiterAPI,
 };

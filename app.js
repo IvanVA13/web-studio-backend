@@ -4,16 +4,17 @@ const cors = require('cors');
 const helmet = require('helmet');
 const boolParser = require('express-query-boolean');
 const rateLimit = require('express-rate-limit');
-const sessions = require('express-session');
-const cookieParser = require('cookie-parser');
+// const sessions = require('express-session');
+// const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const router = require('./routers/api');
 const {
   httpCode: { NOT_FOUND, INTERNAL_SERVER_ERROR },
   message,
+  reqLimiterAPI,
 } = require('./helpers/constants');
-const sessionOpt = require('./helpers/sessions');
+// const { sessionOpt } = require('./helpers/sessions');
 
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
@@ -23,9 +24,9 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json({ limit: 5000 }));
 app.use(boolParser());
-app.use(sessions(sessionOpt));
-app.use(cookieParser());
-// app.use('/api', rateLimit('rules'));
+// app.use(sessions(sessionOpt));
+// app.use(cookieParser());
+app.use('/api', rateLimit(reqLimiterAPI));
 app.use('/api', router);
 
 app.use((_, res) => {

@@ -1,5 +1,5 @@
-const sessions = require('express-session');
-const MongoStore = require('connect-mongo')(sessions);
+// const sessions = require('express-session');
+const MongoStore = require('connect-mongo');
 require('dotenv').config();
 const { DB_HOST, SESSION_SECRET_KEY } = process.env;
 
