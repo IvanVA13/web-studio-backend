@@ -296,7 +296,7 @@ const verificationWithEmail = async (req, res) => {
 
   if (emailReq) {
     const user = await getUserByEmail(emailReq);
-    if (!user) {
+    if (!user || user.verify) {
       throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
     }
     const { firstName, lastName, verifyEmailToken } = user;
