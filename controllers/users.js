@@ -159,7 +159,7 @@ const refresh = async (req, res) => {
 
 const logout = async (req, res) => {
   const { id } = req?.user;
-  await updateUser(id, { token: null });
+  await updateUser(id, { token: null, refreshToken: null });
   // req.session.destroy();
   return res.status(httpCode.NO_CONTENT).json({});
 };
