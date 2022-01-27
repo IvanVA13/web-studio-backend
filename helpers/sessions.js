@@ -14,7 +14,7 @@ const sessionOpt = {
   resave: false,
   store: MongoStore.create({
     mongoUrl: DB_HOST,
-    touchAfter: 3600,
+    touchAfter: time,
     mongoOptions: { useUnifiedTopology: true },
   }),
 };
