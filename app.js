@@ -13,7 +13,7 @@ const {
   httpCode: { NOT_FOUND, INTERNAL_SERVER_ERROR },
   message,
 } = require('./helpers/constants');
-const { sessionOpt } = require('./helpers/sessions');
+const sessionOpt = require('./helpers/sessions');
 
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';

@@ -1,5 +1,5 @@
-// const sessions = require('express-session');
-const MongoStore = require('connect-mongo');
+const sessions = require('express-session');
+const MongoStore = require('connect-mongo')(sessions);
 require('dotenv').config();
 const { DB_HOST, SESSION_SECRET_KEY } = process.env;
 
@@ -9,7 +9,6 @@ const sessionOpt = {
   secret: SESSION_SECRET_KEY,
   name: 'session',
   saveUninitialized: true,
-  //   secure: true,
   cookie: { maxAge: time * 1000 },
   resave: false,
   store: MongoStore.create({
@@ -19,4 +18,4 @@ const sessionOpt = {
   }),
 };
 
-module.exports = { sessionOpt };
+module.exports = sessionOpt;
