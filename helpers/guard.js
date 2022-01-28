@@ -4,21 +4,13 @@ require('../config/passport');
 const { httpCode, message, statusCode } = require('./constants.js');
 
 const guard = (req, res, next) => {
-  passport.authenticate('jwt', { session: false }, (err, user) => {
-    // const { userId } = req.session;
+  passport.authenticate('jwt', { session: false }, (err, user, session) => {
     const headerAuth = req.get('Authorization');
     let token = null;
     if (headerAuth) {
       token = headerAuth.split(' ')[1];
     }
-    if (
-      err ||
-      !user ||
-      token !== user?.token
-      // ||
-      // !userId ||
-      // userId !== user.id
-    ) {
+    if (err) {
       return res.status(httpCode.UNAUTHORIZED).json({
         status: statusCode.UNAUTHORIZED,
         code: httpCode.UNAUTHORIZED,
@@ -26,6 +18,7 @@ const guard = (req, res, next) => {
       });
     }
     req.user = user;
+    req.session = session;
     return next();
   })(req, res, next);
 };

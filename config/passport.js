@@ -3,6 +3,7 @@ const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 require('dotenv').config();
 const { JWT_SECRET_KEY } = process.env;
 const { getUserById } = require('../repositories/users');
+const Session = require('../models/session');
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -12,14 +13,15 @@ const opts = {
 passport.use(
   new JwtStrategy(opts, async (payload, done) => {
     try {
-      const user = await getUserById(payload.id);
+      const user = await getUserById(payload.uid);
+      const session = await Session.findById(payload.sid);
       if (!user) {
         return done(new Error('User not found'));
       }
-      if (!user.token) {
-        return done(null, false);
+      if (!session) {
+        return done(new Error('Invalid session'));
       }
-      return done(null, user);
+      return done(null, user, session);
     } catch (err) {
       if (err) {
         done(err, false);

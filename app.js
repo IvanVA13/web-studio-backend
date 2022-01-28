@@ -4,8 +4,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const boolParser = require('express-query-boolean');
 const rateLimit = require('express-rate-limit');
-// const sessions = require('express-session');
-// const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const router = require('./routers/api');
@@ -14,7 +12,6 @@ const {
   message,
   reqLimiterAPI,
 } = require('./helpers/constants');
-// const { sessionOpt } = require('./helpers/sessions');
 
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
@@ -24,8 +21,6 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json({ limit: 5000 }));
 app.use(boolParser());
-// app.use(sessions(sessionOpt));
-// app.use(cookieParser());
 app.use('/api', rateLimit(reqLimiterAPI));
 app.use('/api', router);
 

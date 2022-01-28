@@ -50,14 +50,6 @@ const user = new Schema(
         }
       },
     },
-    token: {
-      type: String,
-      default: null,
-    },
-    refreshToken: {
-      type: String,
-      default: null,
-    },
     verify: {
       type: Boolean,
       default: false,

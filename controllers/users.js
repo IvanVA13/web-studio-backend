@@ -8,6 +8,7 @@ const queryString = require('query-string');
 const { httpCode, statusCode, message } = require('../helpers/constants');
 const {
   createUser,
+  getUserById,
   getUserByEmail,
   updateUser,
   getUserByQuery,
@@ -16,11 +17,8 @@ const {
 const UploadAvatarService = require('../services/cloud-avatar');
 const { SenderEmailService } = require('../services/email-gen');
 const { createSendGridSender } = require('../services/email-senders');
-const {
-  verifyEmailTemp,
-  resetPasswordTemp,
-  changeEmailTemp,
-} = require('../helpers/emailTemp');
+const { verifyEmailTemp, resetPasswordTemp } = require('../helpers/emailTemp');
+const Session = require('../models/session');
 
 require('dotenv').config();
 const {
@@ -48,13 +46,11 @@ const register = async (req, res) => {
     ...body,
     verifyEmailToken,
   });
-
   await verifyEmail.sendEmail(email, {
     userName: `${lastName} ${firstName}`,
     link: `api/users/verify/${verifyEmailToken}`,
     ...verifyEmailTemp,
   });
-
   return res.status(httpCode.CREATED).json({
     status: statusCode.SUCCESS,
     code: httpCode.CREATED,
@@ -68,24 +64,24 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const {
-    body,
-    // sessionID: sid
-  } = req;
+  const { body } = req;
   const { email: reqEmail, password } = body;
   const user = await getUserByEmail(reqEmail);
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
-  const { id, verify, email } = user;
+  const { id: uid, verify, email } = user;
   const validPass = await user?.isValidPassword(password);
   if (!validPass || !verify) {
     throw new Unauthorized(message.NOT_AUTHORIZED);
   }
-  req.user = id;
+  const { _id: sid } = await Session.create({
+    uid,
+  });
+
   const payload = {
-    id,
-    // , sid
+    uid,
+    sid,
   };
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
@@ -93,14 +89,13 @@ const login = async (req, res) => {
   const refreshToken = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_REFRESH_EXPIRE_TIME,
   });
-
-  await updateUser(id, { token, refreshToken });
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,
+    token,
+    refreshToken,
+    sid,
     data: {
-      token,
-      refreshToken,
       user: {
         email,
       },
@@ -116,51 +111,54 @@ const refresh = async (req, res) => {
       message: message.NOT_VALID,
     });
   }
-  if (authorizationHeader) {
-    try {
-      const refreshToken = await authorizationHeader.replace('Bearer ', '');
-      let {
-        id,
-        // , sid
-      } = await jwt.verify(refreshToken, JWT_SECRET_KEY);
-      // const { sessionID } = req;
-      // if (sid !== sessionID) {
-      //   req.session.userId = id;
-      //   sid = sessionID;
-      // }
-
-      const token = await jwt.sign(
-        {
-          id,
-          // , sid
-        },
-        JWT_SECRET_KEY,
-        {
-          expiresIn: JWT_ACCESS_EXPIRE_TIME,
-        },
-      );
-      const user = await updateUser(id, { token });
-      if (user) {
-        return res.json({
-          statusCode: statusCode.SUCCESS,
-          token,
-        });
-      } else {
-        throw new Error(message.USER_NOT_REG);
-      }
-    } catch ({ message }) {
-      return res.status(httpCode.UNAUTHORIZED).json({
-        statusCode: statusCode.ERR,
-        message,
-      });
-    }
+  console.log(req.params.sid);
+  const activeSession = await Session.findById(req.params.sid);
+  if (!activeSession) {
+    throw new NotFound('Invalid session');
   }
+  const refreshToken = await authorizationHeader.replace('Bearer ', '');
+  let payload;
+  try {
+    payload = await jwt.verify(refreshToken, JWT_SECRET_KEY);
+  } catch ({ message }) {
+    await Session.findByIdAndDelete(req.params.sid);
+    return res.status(httpCode.UNAUTHORIZED).json({
+      statusCode: statusCode.ERR,
+      message,
+    });
+  }
+  const user = await getUserById(payload.uid);
+  const session = await Session.findById(payload.sid);
+  if (!user) {
+    throw new NotFound(message.USER_NOT_REG);
+  }
+  const { id: uid } = user;
+  if (!session) {
+    throw new NotFound('Invalid session');
+  }
+  await Session.findByIdAndDelete(payload.sid);
+  const { _id: sid } = await Session.create({
+    uid,
+  });
+  const newAccessToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
+    expiresIn: JWT_ACCESS_EXPIRE_TIME,
+  });
+  const newRefreshToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
+    expiresIn: JWT_REFRESH_EXPIRE_TIME,
+  });
+  return res.json({
+    statusCode: statusCode.SUCCESS,
+    newAccessToken,
+    newRefreshToken,
+    sid,
+  });
 };
 
 const logout = async (req, res) => {
-  const { id } = req?.user;
-  await updateUser(id, { token: null, refreshToken: null });
-  // req.session.destroy();
+  const { _id } = req.session;
+  await Session.deleteOne({ _id });
+  req.user = null;
+  req.session = null;
   return res.status(httpCode.NO_CONTENT).json({});
 };
 
@@ -181,12 +179,9 @@ const current = async (req, res) => {
 const avatars = async (req, res) => {
   const { id, idCloudAvatar: idAvatar } = req?.user;
   const { path } = req.file;
-
   const { idCloudAvatar, avatarUrl } = await uploads.saveAvatar(path, idAvatar);
-
   await fs.unlink(path);
   await updateUser(id, { avatarUrl, idCloudAvatar });
-
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,
@@ -200,7 +195,6 @@ const changeFirstName = async (req, res) => {
   const { user, body } = req;
   const { id } = user;
   const { firstName } = body;
-
   await updateUser(id, { firstName });
   return res.json({
     status: statusCode.SUCCESS,
@@ -215,7 +209,6 @@ const changeLastName = async (req, res) => {
   const { user, body } = req;
   const { id } = user;
   const { lastName } = body;
-
   await updateUser(id, { lastName });
   return res.json({
     status: statusCode.SUCCESS,
@@ -230,7 +223,6 @@ const changeEmail = async (req, res) => {
   const { user, body } = req;
   const { id } = user;
   const { email } = body;
-
   await updateUser(id, { email });
   return res.json({
     status: statusCode.SUCCESS,
@@ -245,7 +237,6 @@ const changePassword = async (req, res) => {
   const { user, body } = req;
   const { id } = user;
   const { password } = body;
-
   await updateUserPassword(id, password);
   return res.json({
     status: statusCode.SUCCESS,
@@ -258,7 +249,6 @@ const changeSex = async (req, res) => {
   const { user, body } = req;
   const { id } = user;
   const { sex } = body;
-
   await updateUser(id, { sex });
   return res.json({
     status: statusCode.SUCCESS,
@@ -276,7 +266,6 @@ const verificationWithEmail = async (req, res) => {
   } = req;
   if (verifyEmailToken) {
     const user = await getUserByQuery({ verifyEmailToken });
-
     if (!user) {
       throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
     }
@@ -350,7 +339,6 @@ const googleAuth = async (_, res) => {
 };
 
 const googleRedirect = async (req, res) => {
-  // const { sessionID: sid } = req;
   const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
   const urlObj = new URL(fullUrl);
   const urlParams = queryString.parse(urlObj.search);
@@ -368,7 +356,6 @@ const googleRedirect = async (req, res) => {
       code,
     },
   });
-
   const userData = await axios({
     url: 'https://www.googleapis.com/oauth2/v2/userinfo',
     method: 'get',
@@ -380,7 +367,6 @@ const googleRedirect = async (req, res) => {
     data: { email, picture, id: userGoogleId, given_name, family_name },
   } = userData;
   const existingUser = await getUserByEmail(email);
-
   if (!existingUser) {
     await createUser({
       firstName: given_name,
@@ -392,13 +378,15 @@ const googleRedirect = async (req, res) => {
     });
   }
   const createdUser = await getUserByEmail(email);
+  const { id: uid } = existingUser ? existingUser : createdUser;
 
-  const { id } = existingUser ? existingUser : createdUser;
-  // req.session.userId = id;
+  const { _id: sid } = await Session.create({
+    uid,
+  });
 
   const payload = {
-    id,
-    // , sid
+    uid,
+    sid,
   };
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
@@ -406,7 +394,6 @@ const googleRedirect = async (req, res) => {
   const refreshToken = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: JWT_REFRESH_EXPIRE_TIME,
   });
-  await updateUser(id, { token, refreshToken });
   return res.redirect(
     `${BASE_URL_FRONT}/login?token=${token}&refreshToken=${refreshToken}&gid=${userGoogleId}
     `,

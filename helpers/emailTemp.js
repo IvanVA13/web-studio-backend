@@ -8,10 +8,10 @@ const resetPasswordTemp = {
   btnText: 'Click here to reset password',
 };
 
-const changeEmailTemp = {
-  subject: 'Change email',
-  btnText: 'Click here to confirm change email',
-};
+// const changeEmailTemp = {
+//   subject: 'Change email',
+//   btnText: 'Click here to confirm change email',
+// };
 
 const newOrderEmailTemp = {
   intro: 'Your order has been processed successfully',
@@ -29,7 +29,7 @@ const cancelOrderEmailTemp = {
 module.exports = {
   verifyEmailTemp,
   resetPasswordTemp,
-  changeEmailTemp,
+  // changeEmailTemp,
   newOrderEmailTemp,
   cancelOrderEmailTemp,
 };

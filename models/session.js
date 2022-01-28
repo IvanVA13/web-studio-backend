@@ -1,15 +1,9 @@
-const { Schema, model } = require('mongoose');
+const { Schema, model, SchemaTypes } = require('mongoose');
 
 const session = new Schema({
-  _id: {
-    type: String,
-    required: true,
-  },
-  expires: {
-    type: Date,
-  },
-  session: {
-    type: Object,
+  uid: {
+    type: SchemaTypes.ObjectId,
+    default: null,
   },
 });
 

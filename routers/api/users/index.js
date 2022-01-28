@@ -50,13 +50,12 @@ router.post('/verify', asyncWrapper(verificationWithEmail));
 router.patch('/subscribe', guard, asyncWrapper(subscribe));
 router.get('/google-auth', asyncWrapper(googleAuth));
 router.get('/google-redirect', asyncWrapper(googleRedirect));
-router.get('/refresh-token', refresh);
-
-router.post('/forgotten', validationForgotten, forgotten);
+router.get('/refresh-token/:sid', asyncWrapper(refresh));
+router.post('/forgotten', validationForgotten, asyncWrapper(forgotten));
 router.post(
   '/reset-password/:resetPasswordToken',
   validationResetPassword,
-  resetPassword,
+  asyncWrapper(resetPassword),
 );
 
 module.exports = router;
