@@ -21,22 +21,24 @@ const statusCode = {
 };
 
 const message = {
-  NOT_FOUND: 'Page not found',
-  USER_NOT_REG: 'User not found',
-  BAD_EMAIL_OR_PASSWORD: 'Email or password is wrong',
-  NOT_AUTHORIZED: 'Not authorized',
-  CONFLICT: 'Email in use',
-  TOO_MANY_REQUESTS: 'Too mach requests, try later...',
   DB_CONNECT_SUCCESS: 'Database connection successful',
-  DB_CONNECT_TERMINATED: 'Connection to database terminated',
-  DB_CONNECT_ERROR: 'Error connection to db:',
   VERIFY_SUCCESS: 'Verification successful',
   VERIFY_RESEND: 'Verification email sent',
-  VERIFIED: 'Your email has already been verified',
-  NOT_VALID: 'missing required fields',
-  WRONG_FORMAT: 'Wrong format!',
-  ORDER_NOT_FOUND: 'Order not found',
   PASSWORD_RESET_OK: 'Password reset success',
+  NOT_VALID: 'missing required fields',
+  BAD_EMAIL_OR_PASSWORD: 'Email or password is wrong',
+  WRONG_FORMAT: 'Wrong format!',
+  NO_PATH_FILE: 'Missing path to file',
+  NOT_AUTHORIZED: 'Not authorized',
+  NOT_FOUND: 'Page not found',
+  USER_NOT_REG: 'User not found',
+  SESSION_NOT_FOUND: 'Invalid session',
+  VERIFIED: 'Your email has already been verified',
+  ORDER_NOT_FOUND: 'Order not found',
+  CONFLICT: 'Email in use',
+  TOO_MANY_REQUESTS: 'Too mach requests, try later...',
+  DB_CONNECT_TERMINATED: 'Connection to database terminated',
+  DB_CONNECT_ERROR: 'Error connection to db:',
 };
 
 const userRole = {

@@ -1,3 +1,6 @@
+const { Types } = require('mongoose');
+const { BadRequest, NotFound } = require('http-errors');
+
 const {
   httpCode,
   statusCode,
@@ -20,7 +23,7 @@ const createOrder = async (req, res) => {
   const { body, user } = req;
   const { id, email, lastName, firstName } = user;
   if (body) {
-    const { _id, date, name, comment } = await create(id, body);
+    const { _id, createdAt, name, comment } = await create(id, body);
     await verifyEmail.sendEmail(email, {
       userName: `${lastName} ${firstName}`,
       subject: `You make order № ${_id}`,
@@ -28,7 +31,7 @@ const createOrder = async (req, res) => {
       table: {
         data: [
           {
-            date: date.toDateString().replace(/^\w+\s|T\w+$/, ''),
+            date: createdAt.toDateString().replace(/^\w+\s|T\w+$/, ''),
             name,
             comment,
           },
@@ -62,43 +65,27 @@ const updateOrder = async (req, res) => {
     const order = await update(id, userId, {
       status: reqStatus,
     });
-    if (order) {
-      const { date, name, comment, status } = order;
-      await verifyEmail.sendEmail(email, {
-        userName: `${lastName} ${firstName}`,
-        subject: `You cancel order № ${id}`,
-        ...cancelOrderEmailTemp,
-        table: {
-          data: [
-            {
-              date: date.toDateString().replace(/^\w+\s|T\w+$/, ''),
-              name,
-              comment,
-            },
-          ],
-        },
-      });
-      return res.json({
-        status: statusCode.SUCCESS,
-        code: httpCode.OK,
-        data: {
-          order: {
-            status,
-          },
-        },
-      });
-    } else {
-      return res.json({
-        status: statusCode.SUCCESS,
-        code: httpCode.OK,
+    if (!order) {
+      return res.status(httpCode.NOT_FOUND).json({
+        status: statusCode.ERR,
+        code: httpCode.NOT_FOUND,
         message: message.ORDER_NOT_FOUND,
       });
     }
-  }
-  if (role === userRole.MANAGER && reqStatus !== orderStatus.NEW) {
-    const { clientId } = body;
-    const { status } = await update(id, clientId, {
-      status: reqStatus,
+    const { createdAt, name, comment, status } = order;
+    await verifyEmail.sendEmail(email, {
+      userName: `${lastName} ${firstName}`,
+      subject: `You cancel order № ${id}`,
+      ...cancelOrderEmailTemp,
+      table: {
+        data: [
+          {
+            date: createdAt.toDateString().replace(/^\w+\s|T\w+$/, ''),
+            name,
+            comment,
+          },
+        ],
+      },
     });
     return res.json({
       status: statusCode.SUCCESS,
@@ -110,9 +97,31 @@ const updateOrder = async (req, res) => {
       },
     });
   }
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
+  if (role === userRole.MANAGER && reqStatus !== orderStatus.NEW) {
+    const { clientId } = body;
+    const { status } = await update(id, clientId, {
+      status: reqStatus,
+    });
+    if (!status) {
+      return res.status(httpCode.NOT_FOUND).json({
+        status: statusCode.ERR,
+        code: httpCode.NOT_FOUND,
+        message: message.ORDER_NOT_FOUND,
+      });
+    }
+    return res.json({
+      status: statusCode.SUCCESS,
+      code: httpCode.OK,
+      data: {
+        order: {
+          status,
+        },
+      },
+    });
+  }
+  return res.status(httpCode.BAD_REQUEST).json({
+    status: statusCode.ERR,
+    code: httpCode.BAD_REQUEST,
     message: message.NOT_VALID,
   });
 };
@@ -141,8 +150,13 @@ const getOrderById = async (req, res) => {
   const { params, user } = req;
   const { id: orderId } = params;
   const { id: userId } = user;
-
+  if (!Types.ObjectId.isValid(orderId)) {
+    throw new BadRequest(message.NOT_VALID);
+  }
   const order = await getById(orderId, userId);
+  if (!order) {
+    throw new NotFound(message.ORDER_NOT_FOUND);
+  }
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,

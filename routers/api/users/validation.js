@@ -19,12 +19,29 @@ const userValidationSchema = Joi.object({
   resetPasswordToken: Joi.string().optional(),
 });
 
-const forgottenValidationSchema = Joi.object({
+const emailValidationSchema = Joi.object({
   email: Joi.string().email().required(),
 });
 
-const resetPasswordValidationSchema = Joi.object({
+const passwordValidationSchema = Joi.object({
   password: Joi.string().min(6).max(50).required(),
+});
+
+const firstNameValidationSchema = Joi.object({
+  firstName: Joi.string().required(),
+});
+
+const lastNameValidationSchema = Joi.object({
+  lastName: Joi.string().required(),
+});
+
+const sexValidationSchema = Joi.object({
+  sex: Joi.boolean().required(),
+});
+
+const subscribeValidationSchema = Joi.object({
+  email: Joi.string().required(),
+  subscribe: Joi.boolean().required(),
 });
 
 const validate = async (schema, value, errMessage, next) => {
@@ -43,10 +60,23 @@ module.exports = {
   validUser: (req, _, next) => {
     return validate(userValidationSchema, req.body, NOT_VALID, next);
   },
-  validationForgotten: (req, _, next) => {
-    return validate(forgottenValidationSchema, req.body, NOT_VALID, next);
+  validationEmail: (req, _, next) => {
+    return validate(emailValidationSchema, req.body, NOT_VALID, next);
   },
-  validationResetPassword: (req, _, next) => {
-    return validate(resetPasswordValidationSchema, req.body, NOT_VALID, next);
+  validationPassword: (req, _, next) => {
+    return validate(passwordValidationSchema, req.body, NOT_VALID, next);
+  },
+
+  validationFirstName: (req, _, next) => {
+    return validate(firstNameValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationLastName: (req, _, next) => {
+    return validate(lastNameValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationSex: (req, _, next) => {
+    return validate(sexValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationSubscribe: (req, _, next) => {
+    return validate(subscribeValidationSchema, req.body, NOT_VALID, next);
   },
 };

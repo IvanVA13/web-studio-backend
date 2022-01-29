@@ -9,9 +9,6 @@ const {
 } = require('./constants');
 
 const uniquePartOfName = `${Math.random() * 1000000}`;
-// `${Date.now()}~${new Date(
-// Date.now(),
-// ).toLocaleDateString('ua-UA')}`;
 
 const storage = multer.diskStorage({
   destination: (_, __, cb) => {
@@ -31,13 +28,13 @@ const storage = multer.diskStorage({
 const uploadImg = multer({
   storage: storage,
   fileFilter: (_, file, cb) => {
-    if (file.mimetype.includes('image')) {
-      cb(null, true);
-      return;
+    if (!file.mimetype.includes('image')) {
+      const err = new Error(WRONG_FORMAT);
+      err.status = BAD_REQUEST;
+      cb(err);
     }
-    const err = new Error(WRONG_FORMAT);
-    err.status = BAD_REQUEST;
-    cb(err);
+    cb(null, true);
+    return;
   },
 });
 

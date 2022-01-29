@@ -3,10 +3,6 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 
 const order = new Schema(
   {
-    date: {
-      type: Date,
-      required: true,
-    },
     name: {
       type: String,
       required: true,

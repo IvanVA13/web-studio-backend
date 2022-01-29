@@ -13,7 +13,6 @@ const uploadCloud = promisify(cloudinary.uploader.upload);
 
 class UploadAvatarService {
   async saveAvatar(pathFile, oldIdCloudAvatar) {
-    console.log(oldIdCloudAvatar);
     if (oldIdCloudAvatar === 'male' || oldIdCloudAvatar === 'female') {
       oldIdCloudAvatar = null;
     }

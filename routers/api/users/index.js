@@ -24,8 +24,12 @@ const guard = require('../../../helpers/guard');
 const uploadImg = require('../../../helpers/upload-img');
 const {
   validUser,
-  validationForgotten,
-  validationResetPassword,
+  validationEmail,
+  validationPassword,
+  validationFirstName,
+  validationLastName,
+  validationSex,
+  validationSubscribe,
 } = require('./validation');
 
 const router = express.Router();
@@ -33,6 +37,12 @@ const router = express.Router();
 router.post('/register', validUser, asyncWrapper(register));
 router.post('/login', validUser, asyncWrapper(login));
 router.get('/logout', guard, asyncWrapper(logout));
+router.get('/google-auth', asyncWrapper(googleAuth));
+router.get('/google-redirect', asyncWrapper(googleRedirect));
+router.get('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
+router.post('/verify', validationEmail, asyncWrapper(verificationWithEmail));
+router.get('/refresh-token/:sid', asyncWrapper(refresh));
+
 router.get('/current', guard, asyncWrapper(current));
 router.patch(
   '/avatar',
@@ -40,21 +50,31 @@ router.patch(
   uploadImg.single('avatar'),
   asyncWrapper(avatars),
 );
-router.patch('/first-name', guard, asyncWrapper(changeFirstName));
-router.patch('/last-name', guard, asyncWrapper(changeLastName));
-router.patch('/email', guard, asyncWrapper(changeEmail));
-router.patch('/password', guard, asyncWrapper(changePassword));
-router.patch('/sex', guard, asyncWrapper(changeSex));
-router.get('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
-router.post('/verify', asyncWrapper(verificationWithEmail));
-router.patch('/subscribe', guard, asyncWrapper(subscribe));
-router.get('/google-auth', asyncWrapper(googleAuth));
-router.get('/google-redirect', asyncWrapper(googleRedirect));
-router.get('/refresh-token/:sid', asyncWrapper(refresh));
-router.post('/forgotten', validationForgotten, asyncWrapper(forgotten));
+router.patch(
+  '/first-name',
+  guard,
+  validationFirstName,
+  asyncWrapper(changeFirstName),
+);
+router.patch(
+  '/last-name',
+  guard,
+  validationLastName,
+  asyncWrapper(changeLastName),
+);
+router.patch('/email', guard, validationEmail, asyncWrapper(changeEmail));
+router.patch(
+  '/password',
+  guard,
+  validationPassword,
+  asyncWrapper(changePassword),
+);
+router.patch('/sex', guard, validationSex, asyncWrapper(changeSex));
+router.patch('/subscribe', guard, validationSubscribe, asyncWrapper(subscribe));
+router.post('/forgotten', validationEmail, asyncWrapper(forgotten));
 router.post(
   '/reset-password/:resetPasswordToken',
-  validationResetPassword,
+  validationPassword,
   asyncWrapper(resetPassword),
 );
 

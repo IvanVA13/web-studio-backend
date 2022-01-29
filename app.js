@@ -4,6 +4,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const boolParser = require('express-query-boolean');
 const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 require('dotenv').config();
 
 const router = require('./routers/api');
@@ -23,6 +25,7 @@ app.use(express.json({ limit: 5000 }));
 app.use(boolParser());
 app.use('/api', rateLimit(reqLimiterAPI));
 app.use('/api', router);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use((_, res) => {
   res.status(NOT_FOUND).json({ message: message.NOT_FOUND });

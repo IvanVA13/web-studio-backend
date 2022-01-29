@@ -1,0 +1,1522 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.0.0",
+    "title": "Web-studio API docs",
+    "description": "API documentation for web-studio-backend. [Backend github repository](https://github.com/IvanVA13/web-studio-backend)"
+  },
+  "consumes": ["application/json", "multipart/form-data"],
+  "produces": ["application/json"],
+  "servers": [
+    { "url": "https://web-studioiv.herokuapp.com/api" },
+    { "url": "http://localhost:3000/api" }
+  ],
+  "tags": [
+    {
+      "name": "User",
+      "description": "Authorization and user endpoints"
+    },
+    {
+      "name": "Order",
+      "description": "Order endpoints"
+    }
+  ],
+  "paths": {
+    "/users/register": {
+      "post": {
+        "tags": ["User"],
+        "summary": "User registration",
+        "parameters": [],
+        "requestBody": {
+          "description": "Registration's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "409": {
+            "description": "Email in use",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "tags": ["User"],
+        "summary": "User login",
+        "parameters": [],
+        "requestBody": {
+          "description": "Login's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          },
+          "404": {
+            "description": "User not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/logout": {
+      "get": {
+        "tags": ["User"],
+        "summary": "User logout",
+        "security": [{ "Bearer": [] }],
+        "responses": {
+          "204": {
+            "description": "Successful operation",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/google-auth": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get login or registration with google",
+        "responses": {
+          "200": {
+            "description": "Successful operation (redirect to front-end with accessToken, refreshToken and sid in query). Then use GET /user",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/verify/{verifyEmailToken}": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Verify user email",
+        "parameters": [
+          {
+            "name": "verifyEmailToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Token issued to verify user email"
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {}
+          },
+          "404": {
+            "description": "Your email has already been verified or User not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/verify": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Resend verify token",
+        "parameters": [],
+        "requestBody": {
+          "description": "Verify's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplayVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {}
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "404": {
+            "description": "Your email has already been verified or User not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/refresh-token/{sid}": {
+      "get": {
+        "tags": ["User"],
+        "summary": "User registration",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session id issued to the user for current device"
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          },
+          "404": {
+            "description": "Invalid session or User not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/current": {
+      "get": {
+        "tags": ["User"],
+        "summary": "User registration",
+        "security": [{ "Bearer": [] }],
+
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/avatar": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change or add user avatar",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Avatar's object",
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Wrong format or Missing path to file",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/first-name": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change user first name",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Change's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeFirstNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeFirstNameResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/last-name": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change user last name",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Change's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeLastNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeLastNameResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/email": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change user email",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Change's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeEmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/password": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change user password",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Change's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {}
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/sex": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change user sex",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Change's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeSexRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeSexResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/subscribe": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Change user subscribe",
+        "security": [{ "Bearer": [] }],
+
+        "requestBody": {
+          "description": "Change's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeSubscribeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeSubscribeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/forgotten": {
+      "post": {
+        "tags": ["User"],
+        "summary": "User forgotten password",
+        "parameters": [],
+        "requestBody": {
+          "description": "Forgotten's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgottenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {}
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "404": {
+            "description": "User not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/users/reset-password/{resetPasswordToken}": {
+      "post": {
+        "tags": ["User"],
+        "summary": "User reset password",
+        "parameters": [
+          {
+            "name": "resetPasswordToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Reset password token issued to the user"
+          }
+        ],
+        "requestBody": {
+          "description": "Reset's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {}
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "404": {
+            "description": "User not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/orders/create": {
+      "post": {
+        "tags": ["Order"],
+        "summary": "Order create",
+        "security": [{ "Bearer": [] }],
+        "requestBody": {
+          "description": "Order's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/orders/{id}/status": {
+      "patch": {
+        "tags": ["Order"],
+        "summary": "Change order status",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Order id to the current user"
+          }
+        ],
+        "requestBody": {
+          "description": "Change order's object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeOrderStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeOrderStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          },
+          "404": {
+            "description": "Order not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": ["Order"],
+        "summary": "Get all orders of the current user",
+        "security": [{ "Bearer": [] }],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllOrdersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": ["Order"],
+        "summary": "Order registration",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Order id to the current user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OneOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing required fields",
+            "content": {}
+          },
+          "401": {
+            "description": "Not authorized",
+            "content": {}
+          },
+          "404": {
+            "description": "Order not found",
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RegistrationRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "description": "User's password",
+            "example": "qwerty123"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "User's first name",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "User's last name",
+            "example": "Wick"
+          },
+          "sex": {
+            "type": "string",
+            "description": "User's sex",
+            "example": "male"
+          }
+        }
+      },
+      "RegistrationResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "description": "User's email",
+                "format": "email"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 201,
+          "data": {
+            "email": "guest@example.com"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "description": "User's password",
+            "example": "qwerty123"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "token": {
+            "type": "string",
+            "description": "access token"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "refresh token"
+          },
+          "sid": {
+            "type": "string",
+            "description": "session id"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "description": "User's email",
+                "format": "email"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI2MWMwZjljMjlmNjU5ZDEzNzRiZjQ2NGUiLCJzaWQiOiI2MWY1Mzk0MDUzNTRmYTM3MzhlZjkwNDgiLCJpYXQiOjE2NDM0NjA5MjgsImV4cCI6MTY0MzQ2NDUyOH0.jrLXld0rFaLGkqJaTL89ZiazhMmdeC2fQUDu7zcmSy8",
+          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI2MWMwZjljMjlmNjU5ZDEzNzRiZjQ2NGUiLCJzaWQiOiI2MWY1Mzk0MDUzNTRmYTM3MzhlZjkwNDgiLCJpYXQiOjE2NDM0NjA5MjgsImV4cCI6MTY0MzU0NzMyOH0.5LPtw9FTEQX0EhkQrIekO7kHMZJKQos5BiwWwynj9Pw",
+          "sid": "61f539405354fa3738ef9048",
+          "data": {
+            "email": "guest@example.com"
+          }
+        }
+      },
+      "ReplayVerifyRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "properties": {
+          "newAccessToken": {
+            "type": "string",
+            "description": "New access token issued to the current user"
+          },
+          "newRefreshToken": {
+            "type": "string",
+            "description": "New refresh token issued to the current user"
+          },
+          "sid": {
+            "type": "string",
+            "description": "New session id issued to the user for current device"
+          }
+        }
+      },
+      "CurrentUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User's id",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "description": "User's role",
+            "example": "user"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "User's avatar",
+            "example": "https://res.cloudinary.com/djp4ztej6/image/upload/v1643230886/CloudAvatar/users-avatars/oo2wfy2zdw92sw1nejus.png"
+          }
+        }
+      },
+      "AvatarRequest": {
+        "type": "object",
+        "required": ["avatar"],
+        "properties": {
+          "avatar": {
+            "type": "string",
+            "format": "binary",
+            "description": "Avatar's image"
+          }
+        }
+      },
+      "AvatarResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "avatarUrl": {
+                "type": "string",
+                "description": "User's email",
+                "format": "email"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "data": {
+            "avatarUrl": "https://res.cloudinary.com/djp4ztej6/image/upload/v1643230886/CloudAvatar/users-avatars/oo2wfy2zdw92sw1nejus.png"
+          }
+        }
+      },
+      "ChangeFirstNameRequest": {
+        "type": "object",
+        "required": ["firstName"],
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "User's first name",
+            "example": "Keanu"
+          }
+        }
+      },
+      "ChangeFirstNameResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "newFirstName": {
+                "type": "string",
+                "description": "User's first name",
+                "example": "Keanu"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "data": {
+            "newFirstName": "Keanu"
+          }
+        }
+      },
+      "ChangeLastNameRequest": {
+        "type": "object",
+        "required": ["lastName"],
+        "properties": {
+          "lastName": {
+            "type": "string",
+            "description": "User's last name",
+            "example": "Reeves"
+          }
+        }
+      },
+      "ChangeLastNameResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "newLastName": {
+                "type": "string",
+                "description": "User's last name",
+                "example": "Reeves"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "data": {
+            "newFirstName": "Reeves"
+          }
+        }
+      },
+      "ChangeEmailRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          }
+        }
+      },
+      "ChangeEmailResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "newEmail": {
+                "type": "string",
+                "description": "User's email",
+                "format": "email"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "data": {
+            "newEmail": "guest@example.com"
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "required": ["password"],
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "User's password"
+          }
+        }
+      },
+      "ChangeSexRequest": {
+        "type": "object",
+        "required": ["sex"],
+        "properties": {
+          "sex": {
+            "type": "string",
+            "description": "User's sex",
+            "example": "male"
+          }
+        }
+      },
+      "ChangeSexResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "newSex": {
+                "type": "string",
+                "description": "User's sex",
+                "example": "male"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "data": {
+            "newSex": "male"
+          }
+        }
+      },
+      "ChangeSubscribeRequest": {
+        "type": "object",
+        "required": ["email", "subscribe"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          },
+          "subscribe": {
+            "type": "string",
+            "description": "User's subscribe",
+            "example": "true"
+          }
+        }
+      },
+      "ChangeSubscribeResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "subscriptionToNewsletter": {
+                "type": "string",
+                "description": "User's subscription",
+                "example": "true"
+              }
+            }
+          }
+        },
+        "example": {
+          "status": "success",
+          "code": 200,
+          "data": {
+            "subscriptionToNewsletter": "true"
+          }
+        }
+      },
+      "ForgottenRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "format": "email"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": ["password"],
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "User's password",
+            "example": "qwerty456"
+          }
+        }
+      },
+      "OrderCreateRequest": {
+        "type": "object",
+        "required": ["date", "name", "comment"],
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Order's date",
+            "example": "2021-11-08"
+          },
+          "name": {
+            "type": "string",
+            "description": "Order's name",
+            "example": "product 2"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Order's comment",
+            "example": "Some comment"
+          }
+        }
+      },
+      "OrderCreateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status",
+            "example": "success"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code",
+            "example": "201"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Order's id",
+                    "example": "507f1f77bcf86cd799439011"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Order's name",
+                    "example": "product 2"
+                  },
+                  "comment": {
+                    "type": "string",
+                    "description": "Order's comment",
+                    "example": "Some comment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ChangeOrderStatusRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Order's status",
+            "example": "new"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Client's id",
+            "example": "507f1f77bcf86cd799439011"
+          }
+        }
+      },
+      "ChangeOrderStatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status",
+            "example": "success"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code",
+            "example": "200"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "Order's status",
+                    "example": "new"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AllOrdersResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status",
+            "example": "success"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code",
+            "example": "200"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "other": {
+                "type": "object",
+                "properties": {
+                  "totalDocs": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "10"
+                  },
+                  "limit": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "20"
+                  },
+                  "totalPages": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "1"
+                  },
+                  "page": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "1"
+                  },
+                  "pagingCounter": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "1"
+                  },
+                  "hasPrevPage": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "false"
+                  },
+                  "hasNextPage": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "false"
+                  },
+                  "prevPage": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "null"
+                  },
+                  "nextPage": {
+                    "type": "string",
+                    "description": "Total orders",
+                    "example": "null"
+                  }
+                }
+              },
+              "orders": {
+                "type": "array",
+                "description": "User's orders",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "comment": {
+                      "type": "string",
+                      "description": "Order's comment",
+                      "example": "Some comment"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Order's status",
+                      "example": "new"
+                    },
+                    "_id": {
+                      "type": "string",
+                      "description": "Order's id",
+                      "example": "61f44924dc8b8402bc431bc3"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Order's name",
+                      "example": "product 1"
+                    },
+                    "owner": {
+                      "type": "string",
+                      "description": "User's id",
+                      "example": "61c0f9c29f659d1374bf464e"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "Order's create date",
+                      "example": "2021-11-08"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "description": "Order's update date",
+                      "example": "2021-11-09"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "OneOrderResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "success status",
+            "example": "success"
+          },
+          "code": {
+            "type": "string",
+            "description": "success code",
+            "example": "200"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "object",
+                "properties": {
+                  "comment": {
+                    "type": "string",
+                    "description": "Order's comment",
+                    "example": "Some comment"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Order's status",
+                    "example": "new"
+                  },
+                  "_id": {
+                    "type": "string",
+                    "description": "Order's id",
+                    "example": "61f44924dc8b8402bc431bc3"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Order's name",
+                    "example": "product 1"
+                  },
+                  "owner": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "description": "User's id",
+                        "example": "61c0f9c29f659d1374bf464e"
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "User's email",
+                        "format": "email"
+                      }
+                    }
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "description": "Order's create date",
+                    "example": "2021-11-08"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "description": "Order's update date",
+                    "example": "2021-11-09"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-const { Conflict, Unauthorized, NotFound } = require('http-errors');
+const { Conflict, Unauthorized, NotFound, BadRequest } = require('http-errors');
 const { v4: uuid } = require('uuid');
 const jwt = require('jsonwebtoken');
 const fs = require('fs/promises');
@@ -55,10 +55,7 @@ const register = async (req, res) => {
     status: statusCode.SUCCESS,
     code: httpCode.CREATED,
     data: {
-      user: {
-        email,
-        verifyEmailToken,
-      },
+      email,
     },
   });
 };
@@ -96,61 +93,8 @@ const login = async (req, res) => {
     refreshToken,
     sid,
     data: {
-      user: {
-        email,
-      },
+      email,
     },
-  });
-};
-
-const refresh = async (req, res) => {
-  const authorizationHeader = req.get('Authorization');
-  if (!authorizationHeader) {
-    return res.status(httpCode.BAD_REQUEST).json({
-      statusCode: statusCode.ERR,
-      message: message.NOT_VALID,
-    });
-  }
-  console.log(req.params.sid);
-  const activeSession = await Session.findById(req.params.sid);
-  if (!activeSession) {
-    throw new NotFound('Invalid session');
-  }
-  const refreshToken = await authorizationHeader.replace('Bearer ', '');
-  let payload;
-  try {
-    payload = await jwt.verify(refreshToken, JWT_SECRET_KEY);
-  } catch ({ message }) {
-    await Session.findByIdAndDelete(req.params.sid);
-    return res.status(httpCode.UNAUTHORIZED).json({
-      statusCode: statusCode.ERR,
-      message,
-    });
-  }
-  const user = await getUserById(payload.uid);
-  const session = await Session.findById(payload.sid);
-  if (!user) {
-    throw new NotFound(message.USER_NOT_REG);
-  }
-  const { id: uid } = user;
-  if (!session) {
-    throw new NotFound('Invalid session');
-  }
-  await Session.findByIdAndDelete(payload.sid);
-  const { _id: sid } = await Session.create({
-    uid,
-  });
-  const newAccessToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
-    expiresIn: JWT_ACCESS_EXPIRE_TIME,
-  });
-  const newRefreshToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
-    expiresIn: JWT_REFRESH_EXPIRE_TIME,
-  });
-  return res.json({
-    statusCode: statusCode.SUCCESS,
-    newAccessToken,
-    newRefreshToken,
-    sid,
   });
 };
 
@@ -160,165 +104,6 @@ const logout = async (req, res) => {
   req.user = null;
   req.session = null;
   return res.status(httpCode.NO_CONTENT).json({});
-};
-
-const current = async (req, res) => {
-  const { id, email, role, avatarUrl } = req.user;
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    data: {
-      id,
-      email,
-      role,
-      avatarUrl,
-    },
-  });
-};
-
-const avatars = async (req, res) => {
-  const { id, idCloudAvatar: idAvatar } = req?.user;
-  const { path } = req.file;
-  const { idCloudAvatar, avatarUrl } = await uploads.saveAvatar(path, idAvatar);
-  await fs.unlink(path);
-  await updateUser(id, { avatarUrl, idCloudAvatar });
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    data: {
-      avatarUrl,
-    },
-  });
-};
-
-const changeFirstName = async (req, res) => {
-  const { user, body } = req;
-  const { id } = user;
-  const { firstName } = body;
-  await updateUser(id, { firstName });
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    data: {
-      firstName,
-    },
-  });
-};
-
-const changeLastName = async (req, res) => {
-  const { user, body } = req;
-  const { id } = user;
-  const { lastName } = body;
-  await updateUser(id, { lastName });
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    data: {
-      lastName,
-    },
-  });
-};
-
-const changeEmail = async (req, res) => {
-  const { user, body } = req;
-  const { id } = user;
-  const { email } = body;
-  await updateUser(id, { email });
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    data: {
-      email,
-    },
-  });
-};
-
-const changePassword = async (req, res) => {
-  const { user, body } = req;
-  const { id } = user;
-  const { password } = body;
-  await updateUserPassword(id, password);
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    message: message.PASSWORD_RESET_OK,
-  });
-};
-
-const changeSex = async (req, res) => {
-  const { user, body } = req;
-  const { id } = user;
-  const { sex } = body;
-  await updateUser(id, { sex });
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    data: {
-      sex,
-    },
-  });
-};
-
-const verificationWithEmail = async (req, res) => {
-  const {
-    params: { verifyEmailToken },
-    body: { email: emailReq },
-  } = req;
-  if (verifyEmailToken) {
-    const user = await getUserByQuery({ verifyEmailToken });
-    if (!user) {
-      throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
-    }
-    const { _id, verifyEmailToken: verifyToken } = user;
-    if (verifyEmailToken === verifyToken) {
-      await updateUser(_id, {
-        verifyEmailToken: null,
-        verify: true,
-      });
-      return res.json({
-        status: statusCode.SUCCESS,
-        code: httpCode.OK,
-        message: message.VERIFY_SUCCESS,
-      });
-    }
-  }
-
-  if (emailReq) {
-    const user = await getUserByEmail(emailReq);
-    if (!user || user.verify) {
-      throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
-    }
-    const { firstName, lastName, verifyEmailToken } = user;
-    await verifyEmail.sendEmail(emailReq, {
-      userName: `${lastName} ${firstName}`,
-      link: `api/users/verify/${verifyEmailToken}`,
-      ...verifyEmailTemp,
-    });
-
-    return res.json({
-      status: statusCode.SUCCESS,
-      code: httpCode.OK,
-      message: message.VERIFY_RESEND,
-    });
-  }
-};
-
-const subscribe = async (req, res) => {
-  const { email, subscribe } = req.body;
-  const user = await getUserByEmail(email);
-  if (user) {
-    const { _id } = user;
-    const { subscriptionToNewsletter } = await updateUser(_id, {
-      subscriptionToNewsletter: subscribe,
-    });
-    return res.json({
-      status: statusCode.SUCCESS,
-      code: httpCode.OK,
-      data: { subscriptionToNewsletter },
-    });
-  } else {
-    throw new NotFound(`${message.USER_NOT_REG}`);
-  }
 };
 
 const googleAuth = async (_, res) => {
@@ -400,6 +185,229 @@ const googleRedirect = async (req, res) => {
   );
 };
 
+const verificationWithEmail = async (req, res) => {
+  const {
+    params: { verifyEmailToken },
+    body: { email: emailReq },
+  } = req;
+  if (verifyEmailToken) {
+    const user = await getUserByQuery({ verifyEmailToken });
+    if (!user) {
+      throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
+    }
+    const { _id, verifyEmailToken: verifyToken } = user;
+    if (verifyEmailToken === verifyToken) {
+      await updateUser(_id, {
+        verifyEmailToken: null,
+        verify: true,
+      });
+      return res.json({
+        status: statusCode.SUCCESS,
+        code: httpCode.OK,
+        message: message.VERIFY_SUCCESS,
+      });
+    }
+  }
+
+  if (emailReq) {
+    const user = await getUserByEmail(emailReq);
+    if (!user || user.verify) {
+      throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
+    }
+    const { firstName, lastName, verifyEmailToken } = user;
+    await verifyEmail.sendEmail(emailReq, {
+      userName: `${lastName} ${firstName}`,
+      link: `api/users/verify/${verifyEmailToken}`,
+      ...verifyEmailTemp,
+    });
+
+    return res.json({
+      status: statusCode.SUCCESS,
+      code: httpCode.OK,
+      message: message.VERIFY_RESEND,
+    });
+  }
+  return res.status(httpCode.BAD_REQUEST).json({
+    statusCode: statusCode.ERR,
+    message: message.NOT_VALID,
+  });
+};
+
+const refresh = async (req, res) => {
+  const authorizationHeader = req.get('Authorization');
+  if (!authorizationHeader) {
+    return res.status(httpCode.BAD_REQUEST).json({
+      statusCode: statusCode.ERR,
+      message: message.NOT_VALID,
+    });
+  }
+  const activeSession = await Session.findById(req.params.sid);
+  if (!activeSession) {
+    throw new NotFound(message.SESSION_NOT_FOUND);
+  }
+  const refreshToken = await authorizationHeader.replace('Bearer ', '');
+  let payload;
+  try {
+    payload = await jwt.verify(refreshToken, JWT_SECRET_KEY);
+  } catch ({ message }) {
+    await Session.findByIdAndDelete(req.params.sid);
+    return res.status(httpCode.UNAUTHORIZED).json({
+      statusCode: statusCode.ERR,
+      message,
+    });
+  }
+  const user = await getUserById(payload.uid);
+  const session = await Session.findById(payload.sid);
+  if (!user) {
+    throw new NotFound(message.USER_NOT_REG);
+  }
+  const { id: uid } = user;
+  if (!session) {
+    throw new NotFound(message.SESSION_NOT_FOUND);
+  }
+  await Session.findByIdAndDelete(payload.sid);
+  const { _id: sid } = await Session.create({
+    uid,
+  });
+  const newAccessToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
+    expiresIn: JWT_ACCESS_EXPIRE_TIME,
+  });
+  const newRefreshToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
+    expiresIn: JWT_REFRESH_EXPIRE_TIME,
+  });
+  return res.json({
+    statusCode: statusCode.SUCCESS,
+    newAccessToken,
+    newRefreshToken,
+    sid,
+  });
+};
+
+const current = async (req, res) => {
+  const { id, email, role, avatarUrl } = req.user;
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      id,
+      email,
+      role,
+      avatarUrl,
+    },
+  });
+};
+
+const avatars = async (req, res) => {
+  if (!req.file) {
+    throw new BadRequest(message.NO_PATH_FILE);
+  }
+  const { path } = req.file;
+  const { id, idCloudAvatar: idAvatar } = req.user;
+  const { idCloudAvatar, avatarUrl } = await uploads.saveAvatar(path, idAvatar);
+  await fs.unlink(path);
+  await updateUser(id, { avatarUrl, idCloudAvatar });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      avatarUrl,
+    },
+  });
+};
+
+const changeFirstName = async (req, res) => {
+  const {
+    user: { id },
+    body: { firstName },
+  } = req;
+  const { firstName: newFirstName } = await updateUser(id, { firstName });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      newFirstName,
+    },
+  });
+};
+
+const changeLastName = async (req, res) => {
+  const {
+    user: { id },
+    body: { lastName },
+  } = req;
+  const { lastName: newLastName } = await updateUser(id, { lastName });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      newLastName,
+    },
+  });
+};
+
+const changeEmail = async (req, res) => {
+  const {
+    user: { id },
+    body: { email },
+  } = req;
+  const { email: newEmail } = await updateUser(id, { email });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      newEmail,
+    },
+  });
+};
+
+const changePassword = async (req, res) => {
+  const {
+    user: { id },
+    body: { password },
+  } = req;
+  await updateUserPassword(id, password);
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    message: message.PASSWORD_RESET_OK,
+  });
+};
+
+const changeSex = async (req, res) => {
+  const {
+    user: { id },
+    body: { sex },
+  } = req;
+  const { sex: newSex } = await updateUser(id, { sex });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: {
+      newSex,
+    },
+  });
+};
+
+const subscribe = async (req, res) => {
+  const { email, subscribe } = req.body;
+  const user = await getUserByEmail(email);
+  if (!user) {
+    {
+      throw new NotFound(`${message.USER_NOT_REG}`);
+    }
+  }
+
+  const { _id } = user;
+  const { subscriptionToNewsletter } = await updateUser(_id, {
+    subscriptionToNewsletter: subscribe,
+  });
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    data: { subscriptionToNewsletter },
+  });
+};
+
 const forgotten = async (req, res) => {
   const { email } = req.body;
   const user = await getUserByEmail(email);
@@ -419,11 +427,6 @@ const forgotten = async (req, res) => {
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,
-    data: {
-      user: {
-        email,
-      },
-    },
   });
 };
 
@@ -432,15 +435,11 @@ const resetPassword = async (req, res) => {
     body: { password },
     params: { resetPasswordToken },
   } = req;
-
   const user = await getUserByQuery({ resetPasswordToken });
-
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
-
   await updateUserPassword(user.id, password);
-
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,

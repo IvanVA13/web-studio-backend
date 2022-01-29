@@ -5,10 +5,8 @@ const {
 } = require('../../../helpers/constants');
 
 const orderCreateSchema = Joi.object({
-  date: Joi.date().required(),
-  name: Joi.string().min(3).max(40),
-  comment: Joi.string().min(3).max(150),
-  status: Joi.string().valid('new', 'done', 'cancel').optional(),
+  name: Joi.string().min(3).max(40).required(),
+  comment: Joi.string().min(3).max(150).required(),
 });
 
 const orderUpdateSchema = Joi.object({
