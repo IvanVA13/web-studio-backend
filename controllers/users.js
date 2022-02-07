@@ -48,7 +48,7 @@ const register = async (req, res) => {
   });
   await verifyEmail.sendEmail(email, {
     userName: `${lastName} ${firstName}`,
-    link: `api/users/verify/${verifyEmailToken}`,
+    link: `${BASE_URL_FRONT}${verifyEmailToken}`,
     ...verifyEmailTemp,
   });
   return res.status(httpCode.CREATED).json({
