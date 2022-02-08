@@ -5,7 +5,7 @@ const {
 } = require('../helpers/constants');
 
 require('dotenv').config();
-const { NGROK_TUNNEL, BASE_URL } = process.env;
+const { NGROK_TUNNEL, BASE_URL_FRONT } = process.env;
 
 class SenderEmailService {
   constructor(env, sender) {
@@ -14,7 +14,7 @@ class SenderEmailService {
         this.link = NGROK_TUNNEL;
         break;
       case 'production':
-        this.link = BASE_URL;
+        this.link = BASE_URL_FRONT;
         break;
 
       default:
