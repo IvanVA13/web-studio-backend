@@ -93,7 +93,10 @@ const login = async (req, res) => {
     refreshToken,
     sid,
     data: {
+      id,
       email,
+      role,
+      avatarUrl,
     },
   });
 };

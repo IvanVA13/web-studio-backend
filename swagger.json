@@ -864,10 +864,25 @@
           "data": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string",
+                "description": "User's id",
+                "example": "507f1f77bcf86cd799439011"
+              },
               "email": {
                 "type": "string",
                 "description": "User's email",
                 "format": "email"
+              },
+              "role": {
+                "type": "string",
+                "description": "User's role",
+                "example": "user"
+              },
+              "avatarUrl": {
+                "type": "string",
+                "description": "User's avatar",
+                "example": "https://res.cloudinary.com/djp4ztej6/image/upload/v1643230886/CloudAvatar/users-avatars/oo2wfy2zdw92sw1nejus.png"
               }
             }
           }
