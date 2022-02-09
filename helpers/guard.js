@@ -10,7 +10,8 @@ const guard = (req, res, next) => {
     if (headerAuth) {
       token = headerAuth.split(' ')[1];
     }
-    if (err) {
+
+    if (err || !user) {
       return res.status(httpCode.UNAUTHORIZED).json({
         status: statusCode.UNAUTHORIZED,
         code: httpCode.UNAUTHORIZED,

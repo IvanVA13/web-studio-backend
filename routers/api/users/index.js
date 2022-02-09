@@ -42,7 +42,6 @@ router.get('/google-redirect', asyncWrapper(googleRedirect));
 router.get('/verify/:verifyEmailToken', asyncWrapper(verificationWithEmail));
 router.post('/verify', validationEmail, asyncWrapper(verificationWithEmail));
 router.get('/refresh-token/:sid', asyncWrapper(refresh));
-
 router.get('/current', guard, asyncWrapper(current));
 router.patch(
   '/avatar',
