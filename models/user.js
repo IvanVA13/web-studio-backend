@@ -23,6 +23,7 @@ const user = new Schema(
     sex: {
       type: String,
       enum: ['male', 'female'],
+      default: 'male',
     },
     role: {
       type: String,
