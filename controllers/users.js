@@ -182,7 +182,7 @@ const googleRedirect = async (req, res) => {
     expiresIn: JWT_REFRESH_EXPIRE_TIME,
   });
   return res.redirect(
-    `${BASE_URL_FRONT}/login?token=${token}&refreshToken=${refreshToken}&gid=${userGoogleId}
+    `${BASE_URL_FRONT}/login?token=${token}&refreshToken=${refreshToken}&sid=${sid}
     `,
   );
 };
