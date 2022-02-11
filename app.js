@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 require('dotenv').config();
-const { BASE_URL_FRONT } = process.env;
+
 const router = require('./routers/api');
 const {
   httpCode: { NOT_FOUND, INTERNAL_SERVER_ERROR },
@@ -18,10 +18,9 @@ const {
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
 
-app.options('*', cors());
 app.use(helmet());
-app.use(logger(formatsLogger));
 app.use(cors());
+app.use(logger(formatsLogger));
 app.use(express.json({ limit: 5000 }));
 app.use(boolParser());
 app.use('/api', rateLimit(reqLimiterAPI));
