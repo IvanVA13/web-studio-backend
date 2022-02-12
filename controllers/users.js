@@ -33,7 +33,6 @@ const {
 } = process.env;
 const verifyEmail = new SenderEmailService(NODE_ENV, createSendGridSender);
 const uploads = new UploadAvatarService();
-axios.defaults.headers['Access-Control-Allow-Origin'] = '*';
 
 const register = async (req, res) => {
   const { body } = req;
