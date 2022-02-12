@@ -36,7 +36,7 @@ const lastNameValidationSchema = Joi.object({
 });
 
 const sexValidationSchema = Joi.object({
-  sex: Joi.boolean().required(),
+  sex: Joi.string().required(),
 });
 
 const subscribeValidationSchema = Joi.object({

@@ -67,7 +67,17 @@ const login = async (req, res) => {
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
-  const { id: uid, verify, email, role, avatarUrl } = user;
+
+  const {
+    id: uid,
+    verify,
+    firstName,
+    lastName,
+    sex,
+    email,
+    role,
+    avatarUrl,
+  } = user;
   const validPass = await user?.isValidPassword(password);
   if (!validPass || !verify) {
     throw new Unauthorized(message.NOT_AUTHORIZED);
@@ -93,6 +103,9 @@ const login = async (req, res) => {
     refreshToken,
     sid,
     data: {
+      firstName,
+      lastName,
+      sex,
       email,
       role,
       avatarUrl,
