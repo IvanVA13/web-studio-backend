@@ -286,11 +286,14 @@ const refresh = async (req, res) => {
 };
 
 const current = async (req, res) => {
-  const { email, role, avatarUrl } = req.user;
+  const { email, firstName, lastName, sex, role, avatarUrl } = req.user;
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,
     data: {
+      firstName,
+      lastName,
+      sex,
       email,
       role,
       avatarUrl,
