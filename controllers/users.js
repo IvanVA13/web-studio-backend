@@ -456,12 +456,10 @@ const resetPassword = async (req, res) => {
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
-  await updateUserPassword(user.id, password);
-  return res.json({
-    status: statusCode.SUCCESS,
-    code: httpCode.OK,
-    message: message.PASSWORD_RESET_OK,
-  });
+  const { id } = user;
+  await updateUserPassword(id, password);
+  await updateUser(id, { resetPasswordToken: null });
+  return res.redirect(BASE_URL_FRONT);
 };
 
 module.exports = {
