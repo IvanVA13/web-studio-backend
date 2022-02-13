@@ -459,7 +459,11 @@ const resetPassword = async (req, res) => {
   const { id } = user;
   await updateUserPassword(id, password);
   await updateUser(id, { resetPasswordToken: null });
-  return res.redirect(BASE_URL_FRONT);
+  return res.json({
+    status: statusCode.SUCCESS,
+    code: httpCode.OK,
+    message: message.PASSWORD_RESET_OK,
+  });
 };
 
 module.exports = {
