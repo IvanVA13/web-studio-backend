@@ -31,9 +31,8 @@ class SenderEmailService {
       intro = `Welcome to ${name}`,
       table,
       userName = 'Friend',
-      instructions = 'To started click here',
       btn = true,
-      btnText = 'Click here',
+      btnText = 'To started click here',
       link,
     } = options;
     const mailGenerator = new MailGen({

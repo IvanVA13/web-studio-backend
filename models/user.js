@@ -14,11 +14,11 @@ const user = new Schema(
     },
     firstName: {
       type: String,
-      default: 'user-name',
+      default: 'first-name',
     },
     lastName: {
       type: String,
-      default: 'user-last-name',
+      default: 'last-name',
     },
     sex: {
       type: String,
