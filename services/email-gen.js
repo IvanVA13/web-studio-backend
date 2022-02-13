@@ -50,7 +50,6 @@ class SenderEmailService {
         intro,
         table,
         action: {
-          instructions,
           button: btn
             ? {
                 color: '#22BC66',
