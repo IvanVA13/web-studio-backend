@@ -14,11 +14,17 @@ const {
   getUserByQuery,
   updateUserPassword,
 } = require('../repositories/users');
+const {
+  findSessionById,
+  findSessionByIdAndDelete,
+  createSession,
+  deleteOneSession,
+  deleteAllSession,
+} = require('../repositories/sessions');
 const UploadAvatarService = require('../services/cloud-avatar');
 const { SenderEmailService } = require('../services/email-gen');
 const { createSendGridSender } = require('../services/email-senders');
 const { verifyEmailTemp, resetPasswordTemp } = require('../helpers/emailTemp');
-const Session = require('../models/session');
 
 require('dotenv').config();
 const {
@@ -82,9 +88,7 @@ const login = async (req, res) => {
   if (!validPass || !verify) {
     throw new Unauthorized(message.NOT_AUTHORIZED);
   }
-  const { _id: sid } = await Session.create({
-    uid,
-  });
+  const { _id: sid } = await createSession(uid);
 
   const payload = {
     uid,
@@ -115,7 +119,7 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   const { _id } = req.session;
-  await Session.deleteOne({ _id });
+  await deleteOneSession(_id);
   req.user = null;
   req.session = null;
   return res.status(httpCode.NO_CONTENT).json({});
@@ -180,9 +184,7 @@ const googleRedirect = async (req, res) => {
   const createdUser = await getUserByEmail(email);
   const { id: uid } = existingUser ? existingUser : createdUser;
 
-  const { _id: sid } = await Session.create({
-    uid,
-  });
+  const { _id: sid } = await createSession(uid);
 
   const payload = {
     uid,
@@ -256,7 +258,7 @@ const refresh = async (req, res) => {
       message: message.NOT_VALID,
     });
   }
-  const activeSession = await Session.findById(req.params.sid);
+  const activeSession = await findSessionById(req.params.sid);
   if (!activeSession) {
     throw new NotFound(message.SESSION_NOT_FOUND);
   }
@@ -265,14 +267,14 @@ const refresh = async (req, res) => {
   try {
     payload = await jwt.verify(refreshToken, JWT_SECRET_KEY);
   } catch ({ message }) {
-    await Session.findByIdAndDelete(req.params.sid);
+    await findSessionByIdAndDelete(req.params.sid);
     return res.status(httpCode.UNAUTHORIZED).json({
       statusCode: statusCode.ERR,
       message,
     });
   }
   const user = await getUserById(payload.uid);
-  const session = await Session.findById(payload.sid);
+  const session = await findSessionById(payload.sid);
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
@@ -280,10 +282,8 @@ const refresh = async (req, res) => {
   if (!session) {
     throw new NotFound(message.SESSION_NOT_FOUND);
   }
-  await Session.findByIdAndDelete(payload.sid);
-  const { _id: sid } = await Session.create({
-    uid,
-  });
+  await findSessionByIdAndDelete(payload.sid);
+  const { _id: sid } = await createSession(uid);
   const newAccessToken = jwt.sign({ uid, sid }, JWT_SECRET_KEY, {
     expiresIn: JWT_ACCESS_EXPIRE_TIME,
   });
@@ -383,6 +383,7 @@ const changePassword = async (req, res) => {
     body: { password },
   } = req;
   await updateUserPassword(id, password);
+
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,
@@ -459,6 +460,7 @@ const resetPassword = async (req, res) => {
   const { id } = user;
   await updateUserPassword(id, password);
   await updateUser(id, { resetPasswordToken: null });
+  await deleteAllSession(id);
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,

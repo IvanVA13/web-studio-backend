@@ -5,6 +5,7 @@ const verifyEmailTemp = {
 
 const resetPasswordTemp = {
   subject: 'Reset your password',
+  intro: 'You add request to change password. If You don`t, ignore this email',
   btnText: 'Click here to reset password',
 };
 
