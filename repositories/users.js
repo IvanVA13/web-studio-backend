@@ -10,8 +10,8 @@ const getAllUsers = async () => {
 const getUserById = async userId => {
   return await User.findById(userId);
 };
-const getUserByEmail = async email => {
-  return await User.findOne({ email });
+const getUserByEmailOrPhone = async (email, phone) => {
+  return await User.findOne({ $or: [{ email }, { phone }] });
 };
 const getUserByQuery = async query => {
   return await User.findOne({ ...query });
@@ -41,7 +41,7 @@ module.exports = {
   createUser,
   getAllUsers,
   getUserById,
-  getUserByEmail,
+  getUserByEmailOrPhone,
   getUserByQuery,
   updateUser,
   addAvatarUrlToUser,

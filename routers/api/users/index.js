@@ -23,8 +23,10 @@ const asyncWrapper = require('../../../helpers/asyncWrapper');
 const guard = require('../../../helpers/guard');
 const uploadImg = require('../../../helpers/upload-img');
 const {
-  validUser,
+  validationRegUser,
+  validationLoginUser,
   validationEmail,
+  validationPhone,
   validationPassword,
   validationFirstName,
   validationLastName,
@@ -34,8 +36,8 @@ const {
 
 const router = express.Router();
 
-router.post('/register', validUser, asyncWrapper(register));
-router.post('/login', validUser, asyncWrapper(login));
+router.post('/register', validationRegUser, asyncWrapper(register));
+router.post('/login', validationLoginUser, asyncWrapper(login));
 router.get('/logout', guard, asyncWrapper(logout));
 router.get('/google-auth', asyncWrapper(googleAuth));
 router.get('/google-redirect', asyncWrapper(googleRedirect));

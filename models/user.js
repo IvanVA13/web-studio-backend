@@ -12,6 +12,11 @@ const user = new Schema(
       required: [true, 'Email is required'],
       unique: true,
     },
+    phone: {
+      type: String,
+      required: [true, 'Phone is required'],
+      unique: true,
+    },
     firstName: {
       type: String,
       default: 'first-name',

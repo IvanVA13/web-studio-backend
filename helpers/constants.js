@@ -35,7 +35,7 @@ const message = {
   SESSION_NOT_FOUND: 'Invalid session',
   VERIFIED: 'Your email has already been verified',
   ORDER_NOT_FOUND: 'Order not found',
-  CONFLICT: 'Email in use',
+  CONFLICT: 'Email or phone in use',
   TOO_MANY_REQUESTS: 'Too mach requests, try later...',
   DB_CONNECT_TERMINATED: 'Connection to database terminated',
   DB_CONNECT_ERROR: 'Error connection to db:',

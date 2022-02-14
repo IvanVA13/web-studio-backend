@@ -4,11 +4,16 @@ const {
   message: { NOT_VALID },
 } = require('../../../helpers/constants');
 
-const userValidationSchema = Joi.object({
+const userRegValidationSchema = Joi.object({
   firstName: Joi.string().max(40).optional(),
   lastName: Joi.string().max(40).optional(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).max(50).required(),
+  phone: Joi.string()
+    .regex(/[0-9]+/)
+    .min(12)
+    .max(12)
+    .required(),
   sex: Joi.string().valid('male', 'female').optional(),
   role: Joi.string().optional(),
   token: Joi.string().optional(),
@@ -19,8 +24,20 @@ const userValidationSchema = Joi.object({
   resetPasswordToken: Joi.string().optional(),
 });
 
+const userLoginValidationSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).max(50).required(),
+});
+
 const emailValidationSchema = Joi.object({
   email: Joi.string().email().required(),
+});
+const phoneValidationSchema = Joi.object({
+  phone: Joi.string()
+    .regex(/[0-9]+/)
+    .min(12)
+    .max(12)
+    .required(),
 });
 
 const passwordValidationSchema = Joi.object({
@@ -57,11 +74,17 @@ const validate = async (schema, value, errMessage, next) => {
 };
 
 module.exports = {
-  validUser: (req, _, next) => {
-    return validate(userValidationSchema, req.body, NOT_VALID, next);
+  validationRegUser: (req, _, next) => {
+    return validate(userRegValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationLoginUser: (req, _, next) => {
+    return validate(userLoginValidationSchema, req.body, NOT_VALID, next);
   },
   validationEmail: (req, _, next) => {
     return validate(emailValidationSchema, req.body, NOT_VALID, next);
+  },
+  validationPhone: (req, _, next) => {
+    return validate(phoneValidationSchema, req.body, NOT_VALID, next);
   },
   validationPassword: (req, _, next) => {
     return validate(passwordValidationSchema, req.body, NOT_VALID, next);

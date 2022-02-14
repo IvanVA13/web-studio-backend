@@ -9,7 +9,7 @@ const { httpCode, statusCode, message } = require('../helpers/constants');
 const {
   createUser,
   getUserById,
-  getUserByEmail,
+  getUserByEmailOrPhone,
   updateUser,
   getUserByQuery,
   updateUserPassword,
@@ -42,14 +42,18 @@ const uploads = new UploadAvatarService();
 
 const register = async (req, res) => {
   const { body } = req;
-  const { email: reqEmail } = body;
-  const user = await getUserByEmail(reqEmail);
+  const { email: reqEmail, phone } = body;
+  const user = await getUserByEmailOrPhone(reqEmail, phone);
   if (user) {
     throw new Conflict(message.CONFLICT);
   }
   const verifyEmailToken = uuid();
   const { email, lastName, firstName } = await createUser({
     ...body,
+    phone: await phone.replace(
+      /([0-9]{2})([0-9]{3})([0-9]{3})([0-9]{2})([0-9]{2})/,
+      '$1($2)-$3-$4-$5',
+    ),
     verifyEmailToken,
   });
   await verifyEmail.sendEmail(email, {
@@ -69,7 +73,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { body } = req;
   const { email: reqEmail, password } = body;
-  const user = await getUserByEmail(reqEmail);
+  const user = await getUserByEmailOrPhone(reqEmail);
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
@@ -170,18 +174,19 @@ const googleRedirect = async (req, res) => {
   const {
     data: { email, picture, id: userGoogleId, given_name, family_name },
   } = userData;
-  const existingUser = await getUserByEmail(email);
+  const existingUser = await getUserByEmailOrPhone(email);
   if (!existingUser) {
     await createUser({
       firstName: given_name,
       lastName: family_name,
       email,
+      phone: '11(222)-333-44-55',
       password: userGoogleId,
       avatarUrl: picture,
       verify: true,
     });
   }
-  const createdUser = await getUserByEmail(email);
+  const createdUser = await getUserByEmailOrPhone(email);
   const { id: uid } = existingUser ? existingUser : createdUser;
 
   const { _id: sid } = await createSession(uid);
@@ -227,7 +232,7 @@ const verificationWithEmail = async (req, res) => {
   }
 
   if (emailReq) {
-    const user = await getUserByEmail(emailReq);
+    const user = await getUserByEmailOrPhone(emailReq);
     if (!user || user.verify) {
       throw new NotFound(`${message.VERIFIED} or ${message.USER_NOT_REG}`);
     }
@@ -408,7 +413,7 @@ const changeSex = async (req, res) => {
 
 const subscribe = async (req, res) => {
   const { email, subscribe } = req.body;
-  const user = await getUserByEmail(email);
+  const user = await getUserByEmailOrPhone(email);
   if (!user) {
     {
       throw new NotFound(`${message.USER_NOT_REG}`);
@@ -428,7 +433,7 @@ const subscribe = async (req, res) => {
 
 const forgotten = async (req, res) => {
   const { email } = req.body;
-  const user = await getUserByEmail(email);
+  const user = await getUserByEmailOrPhone(email);
   if (!user) {
     throw new NotFound(message.USER_NOT_REG);
   }
