@@ -3,13 +3,13 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 
 const order = new Schema(
   {
-    name: {
+    productType: {
       type: String,
       required: true,
     },
     comment: {
       type: String,
-      default: 'No comments',
+      required: true,
     },
     status: {
       type: String,

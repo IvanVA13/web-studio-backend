@@ -29,6 +29,7 @@ class SenderEmailService {
       greeting = 'Hi',
       signature = false,
       intro = `Welcome to ${name}`,
+      instructions = '',
       table,
       userName = 'Friend',
       btn = true,
@@ -50,6 +51,7 @@ class SenderEmailService {
         intro,
         table,
         action: {
+          instructions,
           button: btn
             ? {
                 color: '#22BC66',

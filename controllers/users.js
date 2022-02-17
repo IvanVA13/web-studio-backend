@@ -83,10 +83,11 @@ const login = async (req, res) => {
     verify,
     firstName,
     lastName,
-    sex,
     email,
-    role,
+    phone,
     avatarUrl,
+    sex,
+    role,
   } = user;
   const validPass = await user?.isValidPassword(password);
   if (!validPass || !verify) {
@@ -113,10 +114,11 @@ const login = async (req, res) => {
     data: {
       firstName,
       lastName,
-      sex,
       email,
-      role,
+      phone,
+      sex,
       avatarUrl,
+      role,
     },
   });
 };
@@ -304,17 +306,18 @@ const refresh = async (req, res) => {
 };
 
 const current = async (req, res) => {
-  const { email, firstName, lastName, sex, role, avatarUrl } = req.user;
+  const { firstName, lastName, email, phone, avatarUrl, sex, role } = req.user;
   return res.json({
     status: statusCode.SUCCESS,
     code: httpCode.OK,
     data: {
       firstName,
       lastName,
-      sex,
       email,
-      role,
+      phone,
       avatarUrl,
+      sex,
+      role,
     },
   });
 };

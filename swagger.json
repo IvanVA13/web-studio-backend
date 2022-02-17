@@ -602,7 +602,6 @@
       "post": {
         "tags": ["Order"],
         "summary": "Order create",
-        "security": [{ "Bearer": [] }],
         "requestBody": {
           "description": "Order's object",
           "required": true,
@@ -1226,17 +1225,27 @@
       },
       "OrderCreateRequest": {
         "type": "object",
-        "required": ["date", "name", "comment"],
+        "required": ["name", "phone", "email", "productType", "comment"],
         "properties": {
-          "date": {
-            "type": "string",
-            "description": "Order's date",
-            "example": "2021-11-08"
-          },
           "name": {
             "type": "string",
-            "description": "Order's name",
-            "example": "product 2"
+            "description": "User's name",
+            "example": "John Wick"
+          },
+          "phone": {
+            "type": "string",
+            "description": "User's phone",
+            "example": "380001112233"
+          },
+          "email": {
+            "type": "string",
+            "description": "User's email",
+            "example": "john-wick@mail.com"
+          },
+          "productType": {
+            "type": "string",
+            "description": "Order's type",
+            "example": "дизайн"
           },
           "comment": {
             "type": "string",
@@ -1269,10 +1278,10 @@
                     "description": "Order's id",
                     "example": "507f1f77bcf86cd799439011"
                   },
-                  "name": {
+                  "productType": {
                     "type": "string",
-                    "description": "Order's name",
-                    "example": "product 2"
+                    "description": "Order's type",
+                    "example": "дизайн"
                   },
                   "comment": {
                     "type": "string",
@@ -1418,10 +1427,10 @@
                       "description": "Order's id",
                       "example": "61f44924dc8b8402bc431bc3"
                     },
-                    "name": {
+                    "productType": {
                       "type": "string",
-                      "description": "Order's name",
-                      "example": "product 1"
+                      "description": "Order's type",
+                      "example": "дизайн"
                     },
                     "owner": {
                       "type": "string",
@@ -1479,10 +1488,10 @@
                     "description": "Order's id",
                     "example": "61f44924dc8b8402bc431bc3"
                   },
-                  "name": {
+                  "productType": {
                     "type": "string",
-                    "description": "Order's name",
-                    "example": "product 1"
+                    "description": "Order's type",
+                    "example": "дизайн"
                   },
                   "owner": {
                     "type": "object",

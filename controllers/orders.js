@@ -1,5 +1,6 @@
 const { Types } = require('mongoose');
 const { BadRequest, NotFound } = require('http-errors');
+const { v4: uuid } = require('uuid');
 
 const {
   httpCode,
@@ -9,47 +10,98 @@ const {
   orderStatus,
 } = require('../helpers/constants');
 const { create, update, getAll, getById } = require('../repositories/orders');
+const { createUser, getUserByEmailOrPhone } = require('../repositories/users');
 const { SenderEmailService } = require('../services/email-gen');
 const { createSendGridSender } = require('../services/email-senders');
 const {
+  verifyEmailTemp,
   newOrderEmailTemp,
   cancelOrderEmailTemp,
 } = require('../helpers/emailTemp');
 require('dotenv').config();
 const { NODE_ENV } = process.env;
-const verifyEmail = new SenderEmailService(NODE_ENV, createSendGridSender);
+const sendedEmail = new SenderEmailService(NODE_ENV, createSendGridSender);
 
 const createOrder = async (req, res) => {
-  const { body, user } = req;
-  const { id, email, lastName, firstName } = user;
-  if (body) {
-    const { _id, createdAt, name, comment } = await create(id, body);
-    await verifyEmail.sendEmail(email, {
-      userName: `${lastName} ${firstName}`,
-      subject: `You make order № ${_id}`,
-      ...newOrderEmailTemp,
-      table: {
-        data: [
-          {
-            date: createdAt.toDateString().replace(/^\w+\s|T\w+$/, ''),
-            name,
-            comment,
-          },
-        ],
-      },
+  const { body } = req;
+  const { name, phone, email, productType, comment } = body;
+  const user = await getUserByEmailOrPhone(email, phone);
+  let uid = '';
+  let firstName = '';
+  let lastName = '';
+  if (!user) {
+    const splitName = name.split(' ');
+    const password = uuid();
+    const verifyEmailToken = uuid();
+    const newUser = await createUser({
+      firstName: splitName[0],
+      lastName: splitName[1],
+      email,
+      phone: phone.replace(
+        /([0-9]{2})([0-9]{3})([0-9]{3})([0-9]{2})([0-9]{2})/,
+        '$1($2)-$3-$4-$5',
+      ),
+      password,
+      verifyEmailToken,
     });
-    return res.status(httpCode.CREATED).json({
-      status: statusCode.SUCCESS,
-      code: httpCode.CREATED,
-      data: {
-        order: {
-          _id,
-          name,
-          comment,
-        },
-      },
+
+    uid = newUser.id;
+    firstName = newUser.firstName;
+    lastName = newUser.lastName;
+
+    await sendedEmail.sendEmail(email, {
+      userName: `${firstName} ${lastName}`,
+      link: `verify/${verifyEmailToken}`,
+      instructions: `Password from your account is: ${password}`,
+      ...verifyEmailTemp,
     });
   }
+
+  if (user) {
+    uid = user.id;
+    firstName = user.firstName;
+    lastName = user.lastName;
+  }
+
+  const {
+    _doc: {
+      _id,
+      productType: resProductType,
+      comment: resComment,
+      createdAt,
+      ...rest
+    },
+  } = await create(uid, {
+    productType,
+    comment,
+  });
+  await sendedEmail.sendEmail(email, {
+    userName: `${firstName} ${lastName}`,
+    subject: `You make order № ${_id}`,
+    ...newOrderEmailTemp,
+    table: {
+      data: [
+        {
+          date: createdAt.toDateString().replace(/^\w+\s|T\w+$/, ''),
+          productType: resProductType,
+          comment: resComment,
+        },
+      ],
+    },
+  });
+  return res.status(httpCode.CREATED).json({
+    status: statusCode.SUCCESS,
+    code: httpCode.CREATED,
+    data: {
+      order: {
+        _id,
+        productType: resProductType,
+        comment: resComment,
+        createdAt,
+        ...rest,
+      },
+    },
+  });
 };
 
 const updateOrder = async (req, res) => {
@@ -72,16 +124,18 @@ const updateOrder = async (req, res) => {
         message: message.ORDER_NOT_FOUND,
       });
     }
-    const { createdAt, name, comment, status } = order;
-    await verifyEmail.sendEmail(email, {
-      userName: `${lastName} ${firstName}`,
+    const {
+      _doc: { createdAt, productType, comment, status, ...rest },
+    } = order;
+    await sendedEmail.sendEmail(email, {
+      userName: `${firstName} ${lastName}`,
       subject: `You cancel order № ${id}`,
       ...cancelOrderEmailTemp,
       table: {
         data: [
           {
             date: createdAt.toDateString().replace(/^\w+\s|T\w+$/, ''),
-            name,
+            productType,
             comment,
           },
         ],
@@ -92,7 +146,11 @@ const updateOrder = async (req, res) => {
       code: httpCode.OK,
       data: {
         order: {
+          productType,
+          comment,
           status,
+          createdAt,
+          ...rest,
         },
       },
     });
