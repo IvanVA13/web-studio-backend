@@ -446,7 +446,7 @@ const forgotten = async (req, res) => {
   await updateUser(id, { resetPasswordToken });
   await verifyEmail.sendEmail(email, {
     userName: `${lastName} ${firstName}`,
-    link: `users/reset-password/${resetPasswordToken}`,
+    link: `reset-password/${resetPasswordToken}`,
     ...resetPasswordTemp,
   });
 
