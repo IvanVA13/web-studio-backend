@@ -8,7 +8,7 @@
   "consumes": ["application/json", "multipart/form-data"],
   "produces": ["application/json"],
   "servers": [
-    { "url": "https://web-studio-backend-production.up.railway.app/api" },
+    { "url": "https://wsbend.up.railway.app/api" },
     { "url": "http://localhost:3000/api" }
   ],
   "tags": [
